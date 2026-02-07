@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="MusicAmp/MusicAmp.csproj" />
+  <Project Path="PlaylistEditing/PlaylistEditing.csproj" />
+</Solution>
