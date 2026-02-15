@@ -15,7 +15,7 @@
             <RowDefinition Height="40" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Border CornerRadius="{StaticResource DefaultBorderRadius}" Background="#904010" Grid.RowSpan="2" />
+        <Border CornerRadius="{StaticResource DefaultBorderRadius}" Background="#100020" Grid.RowSpan="2" />
         <Border CornerRadius="{StaticResource DefaultBorderRadius}" Background="{StaticResource CarbonBrush}" Grid.RowSpan="2" />
         <Border x:Name="TitleBar" CornerRadius="{StaticResource DefaultBorderRadius}" Grid.Row="0" Background="SkyBlue" MouseLeftButtonDown="DragWindow" >
             <Grid>
@@ -188,7 +188,8 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <controls:SongDisplay CurrentSong="{Binding NowPlaying, Mode=OneWay}" x:Name="SongDisplayControl" Margin="10" Foreground="BlanchedAlmond" HorizontalAlignment="Stretch" />
+                <controls:SongDisplay CurrentSong="{Binding NowPlaying, RelativeSource={RelativeSource AncestorType=Window}}" Background="DarkBlue"
+                      x:Name="SongDisplayControl" Margin="10" Foreground="BlanchedAlmond" />
                 <Grid Grid.Row="1" Margin="5">
                     <Slider HorizontalAlignment="Stretch" Height="20" x:Name="TrackSlider" Minimum="0"
                                 Maximum="{Binding NowPlaying.SongDurationSeconds}" IsEnabled="False" Margin="5 0 5 5" />
@@ -207,7 +208,7 @@
                     </StackPanel>
                 </Grid>
             </Grid>
-            <controls:PlaylistControl x:Name="PlaylistControl" Grid.Column="1" Margin="10" Foreground="BlanchedAlmond" Background="Brown" />
+            <controls:PlaylistControl x:Name="PlaylistControl" Grid.Column="1" Margin="10" Foreground="BlanchedAlmond" Background="DarkBlue" Opacity="0.9" />
         </Grid>
     </Grid>
 </Window>

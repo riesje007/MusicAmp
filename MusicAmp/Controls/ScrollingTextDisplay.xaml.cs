@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
@@ -16,7 +17,16 @@ namespace MusicAmp.Controls
             InitializeComponent();
         }
 
-        public static readonly DependencyProperty DisplayTextProperty = DependencyProperty.Register(nameof(DisplayText), typeof(string), typeof(ScrollingTextDisplay), new PropertyMetadata(string.Empty));
+        public static readonly DependencyProperty DisplayTextProperty = DependencyProperty.Register(nameof(DisplayText), typeof(string), typeof(ScrollingTextDisplay), new PropertyMetadata(string.Empty, DisplayTextUpdated));
+
+        private static void DisplayTextUpdated(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is ScrollingTextDisplay control)
+            {
+                // Ensure scrolling is updated on the UI thread after layout has a chance to run
+                control.Dispatcher.BeginInvoke((System.Action)control.UpdateScrolling, System.Windows.Threading.DispatcherPriority.Loaded);
+            }
+        }
 
         public string DisplayText
         {
@@ -46,10 +56,23 @@ namespace MusicAmp.Controls
             double textWidth = TitleBox.DesiredSize.Width;
             double controlWidth = RootGrid.ActualWidth;
 
+            // Center vertically within the control by positioning the TextBlock on the Canvas
+            double titleHeight = TitleBox.DesiredSize.Height;
+            double hostHeight = RootGrid.ActualHeight;
+            double top = Math.Max(0, (hostHeight - titleHeight) / 2.0);
+            Canvas.SetTop(TitleBox, top);
+
+            // Make the Canvas wide enough to contain the full text so that when the Canvas is
+            // translated the TextBlock isn't clipped by the Canvas bounds. The Grid's ClipGeometry
+            // still limits what is visible to the control area.
+            TextHost.Width = Math.Max(textWidth, controlWidth);
+
             if (textWidth <= controlWidth)
             {
                 StopScrolling();
                 TitleBoxTransform.X = 0;
+                // Ensure TextHost fills the control when no scrolling is required
+                TextHost.Width = controlWidth;
                 return;
             }
 
@@ -77,8 +100,9 @@ namespace MusicAmp.Controls
                 }
             };
 
-            Storyboard.SetTarget(animation, TitleBoxTransform);
-            Storyboard.SetTargetProperty(animation, new PropertyPath("X"));
+            // Target the TextBlock and animate its RenderTransform.X property — this resolves correctly in the namescope
+            Storyboard.SetTarget(animation, TextHost);
+            Storyboard.SetTargetProperty(animation, new PropertyPath("(UIElement.RenderTransform).(TranslateTransform.X)"));
 
             _scrollingStoryboard = new Storyboard()
             {
@@ -86,7 +110,8 @@ namespace MusicAmp.Controls
             };
 
             _scrollingStoryboard.Children.Add(animation);
-            _scrollingStoryboard.Begin();
+            // Begin the storyboard with the TitleBox as the containing object to ensure the property path resolves
+            _scrollingStoryboard.Begin(TextHost, true);
         }
 
         private void StopScrolling()

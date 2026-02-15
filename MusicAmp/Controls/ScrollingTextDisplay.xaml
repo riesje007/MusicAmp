@@ -7,17 +7,19 @@
              SizeChanged="ScrollingTetDisplaySizeChanged"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid x:Name="RootGrid">
+    <Grid x:Name="RootGrid" >
         <Grid.Clip>
             <RectangleGeometry x:Name="ClipGeometry" />
         </Grid.Clip>
-        <Canvas Background="Transparent" HorizontalAlignment="Left" x:Name="TextHost">
-            <TextBlock x:Name="TitleBox" Text="{Binding DisplayText, Mode=OneWay}" Foreground="{Binding Foreground}"
-                       FontFamily="{Binding FontFamily}" FontSize="{Binding FontSize}" HorizontalAlignment="Left" TextWrapping="NoWrap">
-                <TextBlock.RenderTransform>
-                    <TranslateTransform x:Name="TitleBoxTransform" />
-                </TextBlock.RenderTransform>
+        <Canvas x:Name="TextHost" Width="{Binding ActualWidth, ElementName=TitleBox}" HorizontalAlignment="Stretch">
+            <TextBlock x:Name="TitleBox" Text="{Binding DisplayText, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=OneWay}" 
+                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       FontFamily="{Binding FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalAlignment="Center" Margin="2 2 2 5"
+                       FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}" TextWrapping="NoWrap">
             </TextBlock>
+            <Canvas.RenderTransform>
+                <TranslateTransform x:Name="TitleBoxTransform" />
+            </Canvas.RenderTransform>
         </Canvas>
     </Grid>
 </UserControl>

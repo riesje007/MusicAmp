@@ -1,18 +1,7 @@
-﻿using ATL;
-using PlaylistEditing;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Text;
+﻿using PlaylistEditing;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace MusicAmp.Controls
 {
@@ -21,7 +10,28 @@ namespace MusicAmp.Controls
     /// </summary>
     public partial class SongDisplay : UserControl
     {
-        public static readonly DependencyProperty CurrentSongProperty = DependencyProperty.Register(nameof(CurrentSong), typeof(PlaylistItem), typeof(SongDisplay), new PropertyMetadata(null));
+        public static readonly DependencyProperty CurrentSongProperty = DependencyProperty.Register(nameof(CurrentSong), typeof(PlaylistItem), typeof(SongDisplay), new PropertyMetadata(null, OnSongChangedCallback));
+
+        private static void OnSongChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SongDisplay sd)
+            {
+                var newSong = e.NewValue as PlaylistItem;
+                if (newSong != null)
+                {
+                    sd.SongTitle = newSong.SongTitle;
+                    sd.PositionInSeconds = 0;
+                    sd.UpdateTimeDisplay();
+                }
+                else
+                {
+                    sd.SongTitle = string.Empty;
+                    sd.PositionInSeconds = 0;
+                    sd.UpdateTimeDisplay();
+                }
+            }
+        }
+
         public static readonly DependencyProperty SongTitleProperty = DependencyProperty.Register(nameof(SongTitle), typeof(string), typeof(SongDisplay), new PropertyMetadata(string.Empty));
         public static readonly DependencyProperty TimePlayingProperty = DependencyProperty.Register(nameof(TimePlaying), typeof(string), typeof(SongDisplay), new PropertyMetadata("00:00"));
         public static readonly DependencyProperty TimeRemainingProperty = DependencyProperty.Register(nameof(TimeRemaining), typeof(string), typeof(SongDisplay), new PropertyMetadata("00:00"));
