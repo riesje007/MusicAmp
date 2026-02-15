@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Player\Player.csproj" />
     <ProjectReference Include="..\PlaylistEditing\PlaylistEditing.csproj" />
   </ItemGroup>
 

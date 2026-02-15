@@ -125,7 +125,7 @@
             </StackPanel>
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" >
                 <ListView ItemsSource="{Binding Path=SongPlaylist, Mode=OneWay}" Foreground="{Binding Foreground}" Background="#90000000" x:Name="PlayListView" 
-                          SelectionMode="Multiple"  >
+                          SelectionMode="Extended"  >
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
                             <Setter Property="Padding" Value="0" />
@@ -143,7 +143,7 @@
                                                         <Storyboard>
                                                             <ColorAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)" To="#20000000" Duration="0:0:0.1" />
                                                         </Storyboard>
-                                                    </VisualState>
+                                                            </VisualState>
                                                     <VisualState x:Name="Selected">
                                                         <Storyboard>
                                                             <ColorAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)" To="#20FFFFFF" Duration="0:0:0.1" />
@@ -164,7 +164,7 @@
                         </Style>
                     </ListView.ItemContainerStyle>
                     <ListView.ItemTemplate>
-                        <DataTemplate DataType="vm:PlaylistItem">
+                        <DataTemplate DataType="PlaylistItem">
                             <Grid VerticalAlignment="Top" Margin="0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -179,6 +179,6 @@
                     </ListView.ItemTemplate>
                 </ListView>
             </ScrollViewer>
-        </Grid>
+</Grid>
     </Grid>
 </UserControl>

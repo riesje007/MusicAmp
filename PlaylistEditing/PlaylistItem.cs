@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel;
-using ATL;
+using TagLib;
 
 namespace PlaylistEditing
 {
@@ -9,15 +9,19 @@ namespace PlaylistEditing
         protected void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         private bool IsStream => FileInformation is null;
 
+        public PlaylistItem() { }
+
         public PlaylistItem(FileInfo file)
         {
+            if (!file.Exists)
+                throw new FileNotFoundException("The specified file does not exist.", file.FullName);
             FileInformation = file;
-            var track = new Track(file.FullName);
-            SongTrackNumber = track.TrackNumber ?? 0;
-            SongTitle = track.Title;
-            SongAlbum = track.Album;
-            SongArtist = track.Artist;
-            SongDurationSeconds = track.Duration;
+            var track = TagLib.File.Create(file.FullName);
+            SongTrackNumber = (int)track.Tag.Track;
+            SongTitle = track.Tag.Title;
+            SongAlbum = track.Tag.Album;
+            SongArtist = track.Tag.FirstPerformer;
+            SongDurationSeconds = track.Properties.Duration.Seconds;
         }
 
         public PlaylistItem(int trackNumber, string title, int numSeconds, Uri streamUri)
@@ -71,8 +75,9 @@ namespace PlaylistEditing
             set
             {
                 if (field != value)
-                    if (FileInformation is not null)
+                    if (FileInformation is not null || StreamUri is null)
                         field = value;
+
                     else
                         field = StreamUri!.OriginalString;
 
@@ -137,10 +142,12 @@ namespace PlaylistEditing
 
         private string GetDisplayText()
         {
+            if (SongTitle == Playlist.FileNotFoundTitle)
+                return $"-- {SongTitle} - {SongArtist}";
             if (IsStream)
                 return $"{SongTrack}{SongTitle} - {StreamUri?.OriginalString}";
             else
-                return $"{SongTrack}{SongTitle} - ({SongArtist})";
+                return $"{SongTrack}{SongTitle} - {SongArtist}";
         }
 
         private string GetTrackTime()

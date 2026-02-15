@@ -8,6 +8,7 @@ namespace PlaylistEditing
     public class Playlist : INotifyCollectionChanged, IEnumerable<PlaylistItem>, INotifyPropertyChanged
     {
         private SortedList<int, PlaylistItem> _items = new SortedList<int, PlaylistItem>();
+        public const string FileNotFoundTitle = "!!! File not found !!!";
 
         public event NotifyCollectionChangedEventHandler? CollectionChanged;
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -17,7 +18,9 @@ namespace PlaylistEditing
         {
             Playlist? playlist = null;
 
-            using (StreamReader sr = new StreamReader(playlistFile.FullName, Encoding.UTF8))
+            string fileContents = File.ReadAllText(playlistFile.FullName);
+            MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(fileContents));
+            using (StreamReader sr = new StreamReader(ms))
             {
                 try
                 {
@@ -34,11 +37,10 @@ namespace PlaylistEditing
                         if (sr.EndOfStream)
                             break;
                         location = sr.ReadLine();
-
-                        PlaylistItem? item = GetItem(tag, location);
+                        PlaylistItem? item = GetItem(tag, location, playlistFile);
                         if (item is not null)
                             playlist.AddItem(item);
-                    }
+                        }
                 }
                 catch (IOException) { }
             }
@@ -46,7 +48,7 @@ namespace PlaylistEditing
             return playlist;
         }
 
-        private static PlaylistItem? GetItem(string? tag, string? location)
+        private static PlaylistItem? GetItem(string? tag, string? location, FileInfo playlistFile)
         {
             PlaylistItem? item = null;
             if (string.IsNullOrEmpty(tag) || !tag.StartsWith("#EXTINF:") || !tag.Contains(',') || string.IsNullOrEmpty(location))
@@ -65,18 +67,36 @@ namespace PlaylistEditing
                 if (uri is not null && uri.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase))
                     item = new PlaylistItem(0, tags[1].Trim(), 0, uri);
                 else
-                    item = new PlaylistItem(new FileInfo(location));
+                    item = CreateItem(location, playlistFile);
             }
             else
-                item = new PlaylistItem(new FileInfo(location));
+                item = CreateItem(location, playlistFile);
 
             return item;
+        }
+
+        private static PlaylistItem CreateItem(string location, FileInfo playlistLocation)
+        {
+            FileInfo locationInfo = new FileInfo(location);
+            if (locationInfo.Exists)
+                return new PlaylistItem(locationInfo);
+
+            var newLocation = playlistLocation.Directory is null ? locationInfo : new FileInfo(Path.Combine(playlistLocation.Directory.FullName, location.ToString()));
+            if (newLocation.Exists)
+                return new PlaylistItem(newLocation);
+
+            return new PlaylistItem()
+            {
+                SongTitle = FileNotFoundTitle,
+                SongArtist = Path.IsPathRooted(location) ? locationInfo.Name : newLocation.Name,
+                SongTrackNumber = 0
+            };
         }
 
         public IList<int> Keys => _items.Keys;
         public IList<PlaylistItem> Values => _items.Values;
 
-        public int Count 
+        public int Count
         {
             get => field;
             private set

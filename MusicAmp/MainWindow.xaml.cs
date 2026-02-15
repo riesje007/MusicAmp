@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Player;
 
 namespace MusicAmp
 {
@@ -10,9 +11,12 @@ namespace MusicAmp
     /// </summary>
     public partial class MainWindow : Window
     {
+        private MusicPlayer musicPlayer = new MusicPlayer();
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = this;
+            NowPlaying = new PlaylistItem(0, "Please open an audio file for playback", 0, new Uri("", UriKind.Relative));
         }
 
         public static readonly DependencyProperty NowPlayingProperty = DependencyProperty.Register(nameof(NowPlaying), typeof(PlaylistItem), typeof(MainWindow), new PropertyMetadata(new PlaylistItem(0, "Please open an audio file for playback", 0, new Uri("", UriKind.Relative))));
