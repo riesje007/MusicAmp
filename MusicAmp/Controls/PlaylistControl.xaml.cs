@@ -15,6 +15,7 @@ namespace MusicAmp.Controls
     {
         public event PropertyChangedEventHandler? PropertyChanged;
         public static readonly DependencyProperty SongPlaylistProperty = DependencyProperty.Register("SongPlaylist", typeof(Playlist), typeof(PlaylistControl), new PropertyMetadata(null));
+        public event EventHandler<PlaylistItem>? PlaylistItemDoubleClicked;
 
         public Playlist SongPlaylist
         {
@@ -140,6 +141,14 @@ namespace MusicAmp.Controls
         private void RandomizeClicked(object sender, RoutedEventArgs e)
         {
             // TODO: Randomize the order of items in the playlist
+        }
+
+        private void PlaylistItem_DoubleClicked(object sender, RoutedEventArgs e)
+        {
+            if (sender is ListViewItem lvi && lvi.DataContext is PlaylistItem item)
+            {
+                PlaylistItemDoubleClicked?.Invoke(this, item);
+            }
         }
     }
 }

@@ -13,12 +13,20 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding TimePlaying, RelativeSource={RelativeSource AncestorType=UserControl}}" FontFamily="Consolas" FontSize="36" x:Name="TimePlayingTextBlock" 
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="{Binding TimePlaying, RelativeSource={RelativeSource AncestorType=UserControl}}" FontFamily="Consolas" FontSize="36" x:Name="TimePlayingTextBlock" 
                            Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="5"
                            MouseLeftButtonDown="TimeBox_LeftButtonPressed" Visibility="Visible" Grid.Column="0" VerticalAlignment="Center" />
-                <TextBlock Text="{Binding TimeRemaining, RelativeSource={RelativeSource AncestorType=UserControl}}" FontFamily="Consolas" FontSize="36" x:Name="TimeRemainingTextBlock" 
+                <TextBlock Grid.Row="0" Text="{Binding TimeRemaining, RelativeSource={RelativeSource AncestorType=UserControl}}" FontFamily="Consolas" FontSize="36" x:Name="TimeRemainingTextBlock" 
                            Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalAlignment="Center" Margin="5"
                            MouseLeftButtonDown="TimeBox_LeftButtonPressed" Visibility="Collapsed" Grid.Column="0" />
+                    <TextBlock Grid.Row="1" Text="{Binding ShowVolume, Mode=OneWay}" FontFamily="Segoe UI" FontSize="12" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                               Margin="5 0 2 2" />
+                </Grid>
                 <local:ScrollingTextDisplay Grid.Column="1" Margin="12 5 0 0" VerticalAlignment="Stretch"
                                             Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}" FontSize="18" 
                                             DisplayText="{Binding SongTitle, RelativeSource={RelativeSource AncestorType=UserControl}}" />

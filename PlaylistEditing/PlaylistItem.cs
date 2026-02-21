@@ -7,7 +7,7 @@ namespace PlaylistEditing
     {
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        private bool IsStream => FileInformation is null;
+        public bool IsStream => FileInformation is null;
 
         public PlaylistItem() { }
 
@@ -21,7 +21,7 @@ namespace PlaylistEditing
             SongTitle = track.Tag.Title;
             SongAlbum = track.Tag.Album;
             SongArtist = track.Tag.FirstPerformer;
-            SongDurationSeconds = track.Properties.Duration.Seconds;
+            SongDurationSeconds = Convert.ToInt32(track.Properties.Duration.TotalSeconds);
         }
 
         public PlaylistItem(int trackNumber, string title, int numSeconds, Uri streamUri)

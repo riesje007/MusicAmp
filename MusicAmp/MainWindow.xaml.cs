@@ -12,20 +12,43 @@ namespace MusicAmp
     public partial class MainWindow : Window
     {
         private MusicPlayer musicPlayer = new MusicPlayer();
+
         public MainWindow()
         {
             InitializeComponent();
             DataContext = this;
             NowPlaying = new PlaylistItem(0, "Please open an audio file for playback", 0, new Uri("", UriKind.Relative));
+            PlaylistControl.PlaylistItemDoubleClicked += PlaylistControl_ItemDoubleClicked;
+            musicPlayer.PositionChanged += OnPositionChanged;
         }
 
         public static readonly DependencyProperty NowPlayingProperty = DependencyProperty.Register(nameof(NowPlaying), typeof(PlaylistItem), typeof(MainWindow), new PropertyMetadata(new PlaylistItem(0, "Please open an audio file for playback", 0, new Uri("", UriKind.Relative))));
+        public static readonly DependencyProperty VolumeProperty = DependencyProperty.Register(nameof(Volume), typeof(double), typeof(MainWindow), new PropertyMetadata(0.2));
+
+        private void OnPositionChanged(object? sender, TimeSpan? position)
+        {
+            if (position.HasValue)
+            {
+                SongDisplayControl.PositionInSeconds = (int)position.Value.TotalSeconds;
+                SongDisplayControl.UpdateTimeDisplay();
+            }
+        }   
 
         public PlaylistItem NowPlaying
         {
             get { return (PlaylistItem)GetValue(NowPlayingProperty); }
-            set { SetValue(NowPlayingProperty, value); }
+            set 
+            { 
+                SetValue(NowPlayingProperty, value); 
+                VolumeControl.IsEnabled = true;
+            }
 
+        }
+
+        public double Volume
+        {
+            get { return (double)GetValue(VolumeProperty); }
+            set { SetValue(VolumeProperty, value); }
         }
 
         /******************* Private fields, properties, and methods *******************/
@@ -50,7 +73,7 @@ namespace MusicAmp
             Application.Current.Shutdown();
         }
 
-        private void OnRadioSwitch(object sender, RoutedEventArgs e)
+        private async void OnRadioSwitch(object sender, RoutedEventArgs e)
         {
             if (sender is RadioButton rb)
             {
@@ -64,6 +87,7 @@ namespace MusicAmp
                     StopBtn.IsChecked = false;
 
                     // ToDo: trigger play function of player
+                    await musicPlayer.Play();
                 }
                 else if (rb == PauseBtn)
                 {
@@ -73,6 +97,7 @@ namespace MusicAmp
                     PauseBtn.IsChecked = true;
                     StopBtn.IsChecked = false;
                     // ToDo: trigger pause function of player
+                    await musicPlayer.Pause();
                 }
                 else if (rb == StopBtn)
                 {
@@ -82,6 +107,7 @@ namespace MusicAmp
                     PauseBtn.IsChecked = false;
                     StopBtn.IsChecked = true;
                     // ToDo: trigger stop function of player
+                    await musicPlayer.Stop();
                 }
             }
         }
@@ -109,6 +135,18 @@ namespace MusicAmp
                     StopBtn.IsChecked = false;
                 }
             }
+        }
+
+        private void PlaylistControl_ItemDoubleClicked(object? sender, PlaylistItem item)
+        {
+            NowPlaying = item;
+            musicPlayer.CurrentSong = NowPlaying;
+        }
+
+        private void VolumeChange(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            musicPlayer.Volume = (float)e.NewValue;
+            SongDisplayControl.Volume = e.NewValue;
         }
     }
 }

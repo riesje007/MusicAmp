@@ -206,6 +206,7 @@
                         <RadioButton Content="&#xE739;" Foreground="DarkRed" Background="#20FFFFFF" Style="{StaticResource PlayButton}" Tag="&#xE73B;" GroupName="playing" Checked="OnRadioSwitch" x:Name="StopBtn" />
                         <Button Content="&#xE893;" Foreground="Blue" Background="#20FFFFFF" Style="{StaticResource NextButton}" Tag="&#xE623;" />
                     </StackPanel>
+                    <Slider Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}" ValueChanged="VolumeChange" IsEnabled="False" x:Name="VolumeControl" />
                 </Grid>
             </Grid>
             <controls:PlaylistControl x:Name="PlaylistControl" Grid.Column="1" Margin="10" Foreground="BlanchedAlmond" Background="DarkBlue" Opacity="0.9" />

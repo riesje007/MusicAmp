@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Navigation;
 
 namespace MusicAmp.Controls
 {
@@ -11,6 +12,7 @@ namespace MusicAmp.Controls
     public partial class SongDisplay : UserControl
     {
         public static readonly DependencyProperty CurrentSongProperty = DependencyProperty.Register(nameof(CurrentSong), typeof(PlaylistItem), typeof(SongDisplay), new PropertyMetadata(null, OnSongChangedCallback));
+        public static readonly DependencyProperty ShowVolumeProperty = DependencyProperty.Register(nameof(ShowVolume), typeof(string), typeof(SongDisplay), new PropertyMetadata("Volume: ??%"));
 
         private static void OnSongChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -32,6 +34,16 @@ namespace MusicAmp.Controls
             }
         }
 
+        public double Volume
+        {
+            get => field;
+            set
+            {
+                field = value;
+                ShowVolume = $"Volume: {(int)(Math.Round(value, 3) * 100.0)}%";
+            }
+        }
+
         public static readonly DependencyProperty SongTitleProperty = DependencyProperty.Register(nameof(SongTitle), typeof(string), typeof(SongDisplay), new PropertyMetadata(string.Empty));
         public static readonly DependencyProperty TimePlayingProperty = DependencyProperty.Register(nameof(TimePlaying), typeof(string), typeof(SongDisplay), new PropertyMetadata("00:00"));
         public static readonly DependencyProperty TimeRemainingProperty = DependencyProperty.Register(nameof(TimeRemaining), typeof(string), typeof(SongDisplay), new PropertyMetadata("00:00"));
@@ -40,6 +52,12 @@ namespace MusicAmp.Controls
         {
             get { return (PlaylistItem?)GetValue(CurrentSongProperty); }
             set { SetValue(CurrentSongProperty, value); }
+        }
+
+        public string ShowVolume
+        {
+            get { return (string)GetValue(ShowVolumeProperty); }
+            set { SetValue(ShowVolumeProperty, value); }
         }
 
         public SongDisplay()
@@ -70,16 +88,15 @@ namespace MusicAmp.Controls
         public int PositionInSeconds { get; set; } = 0;
         public int RemainingSeconds { get => Math.Max(0, TotalTimeInSeconds - PositionInSeconds); }
 
-
-
-        /**************** Private fields, properties, and methods ****************/
-        private bool _remainingTimeShowing = false;
-
-        private void UpdateTimeDisplay()
+        public void UpdateTimeDisplay()
         {
             TimePlayingTextBlock.Text = Format(PositionInSeconds);
             TimeRemainingTextBlock.Text = $"- {Format(RemainingSeconds)}";
         }
+
+
+        /**************** Private fields, properties, and methods ****************/
+        private bool _remainingTimeShowing = false;
 
         private string Format(int seconds)
         {
