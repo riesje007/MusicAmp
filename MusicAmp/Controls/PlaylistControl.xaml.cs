@@ -11,11 +11,11 @@ namespace MusicAmp.Controls
     /// <summary>
     /// Interaction logic for PlaylistControl.xaml
     /// </summary>
-    public partial class PlaylistControl : UserControl, INotifyPropertyChanged
+    public partial class PlaylistControl : UserControl
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
         public static readonly DependencyProperty SongPlaylistProperty = DependencyProperty.Register("SongPlaylist", typeof(Playlist), typeof(PlaylistControl), new PropertyMetadata(null));
         public event EventHandler<PlaylistItem>? PlaylistItemDoubleClicked;
+        public event EventHandler<PlaylistItem?>? NewSelection;
 
         public Playlist SongPlaylist
         {
@@ -30,11 +30,50 @@ namespace MusicAmp.Controls
             SongPlaylist = new Playlist();
         }
 
+        public PlaylistItem? SelectNext()
+        {
+            var item = PlayListView.SelectedItem as PlaylistItem;
+            if (item is not null)
+            {
+                int index = PlayListView.SelectedIndex;
+                if (index < PlayListView.Items.Count - 1)
+                {
+                    PlayListView.SelectedIndex = index + 1;
+                    item = PlayListView.SelectedItem as PlaylistItem;
+                }
+            }
 
+            return item;
+        }
+
+        public PlaylistItem? SelectPrevious()
+        {
+            var item = PlayListView.SelectedItem as PlaylistItem;
+            if (item is not null)
+            {
+                int index = PlayListView.SelectedIndex;
+                if (index > 0)
+                {
+                    PlayListView.SelectedIndex = index - 1;
+                    item = PlayListView.SelectedItem as PlaylistItem;
+                }
+            }
+
+            return item;
+        }
+
+        public bool IsFirst()
+        {  
+            return PlayListView.SelectedIndex == 0; 
+        }
+
+        public bool IsLast()
+        {
+            return PlayListView.SelectedIndex == PlayListView.Items.Count - 1 && PlayListView.Items.Count > 0;
+        }
 
         /* Private fields and methods */
         private FileInfo? PlaylistFile;
-        private void OnPropertyChanged(string? propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         private async void NewPlaylistClicked(object sender, RoutedEventArgs e)
         {
@@ -149,6 +188,20 @@ namespace MusicAmp.Controls
             {
                 PlaylistItemDoubleClicked?.Invoke(this, item);
             }
+        }
+
+        private void PlayListViewScrolling(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        {
+            double newOffset = PlaylistScroller.VerticalOffset - e.Delta / 3.0;
+            PlaylistScroller.ScrollToVerticalOffset(newOffset);
+            e.Handled = true;
+        }
+
+        private void PlaylistSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var item = PlayListView.SelectedItem as PlaylistItem;
+            if (item is not null)
+                NewSelection?.Invoke(this, item);
         }
     }
 }

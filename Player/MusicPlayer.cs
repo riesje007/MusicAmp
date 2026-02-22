@@ -1,6 +1,5 @@
 ﻿using NAudio.Wave;
 using PlaylistEditing;
-using System.ComponentModel;
 
 namespace Player
 {
@@ -8,6 +7,10 @@ namespace Player
     {
         private CancellationTokenSource? _cts;
         public event EventHandler<TimeSpan?>? PositionChanged;
+        private float _lastVolume = 0.0f;
+        public event EventHandler<bool>? ErrorOccurred;
+        public event EventHandler<bool>? PlayableSong;
+        private bool fetchingStream = false;
 
         public PlaylistItem? CurrentSong
         {
@@ -15,7 +18,7 @@ namespace Player
             set
             {
                 field = value;
-                _ = OnCurrentSongChange(value);
+                _ = OnCurrentSongChange(value, new CancellationTokenSource(TimeSpan.FromSeconds(3)).Token);
             }
         }
 
@@ -32,36 +35,56 @@ namespace Player
         private async Task StartTimer()
         {
             _cts = new CancellationTokenSource();
-            while (!_cts.Token.IsCancellationRequested)
+            while (_cts is not null && !_cts.Token.IsCancellationRequested)
             {
                 TimeSpan position = (_reader?.CurrentTime ?? _streamReader?.CurrentTime) ?? TimeSpan.Zero;
                 PositionChanged?.Invoke(this, position);
-                await Task.Delay(1000, _cts.Token);
+                try
+                {
+                    await Task.Delay(1000, _cts.Token);
+                }
+                catch { }
             }
         }
 
-        private async Task OnCurrentSongChange(PlaylistItem? newSong)
+        private async Task OnCurrentSongChange(PlaylistItem? newSong, CancellationToken token)
         {
             await StopMediaPlayback(true);
-            if (CurrentSong is not null)
+            if (CurrentSong is not null && !token.IsCancellationRequested)
             {
                 if (_output is null)
                     _output = new WaveOutEvent();
 
-                if (CurrentSong.IsStream)
+                if (CurrentSong.IsStream && !token.IsCancellationRequested)
                 {
-                    _streamReader = new MediaFoundationReader(CurrentSong.StreamUri!.OriginalString);
-                    _output!.Init(_streamReader);
+                    try
+                    {
+                        _streamReader = await Task.Run(() => new MediaFoundationReader(CurrentSong.StreamUri!.OriginalString), token);
+                    }
+                    catch 
+                    { 
+                        _streamReader = null; 
+                        ErrorOccurred?.Invoke(this, true); 
+                    }
+
+                    if (_streamReader is not null)
+                    {
+                        _output!.Init(_streamReader);
+                        PlayableSong?.Invoke(this, true);
+                    }
+                    else
+                        ErrorOccurred?.Invoke(this, true);
                 }
-                else
+                else if (!token.IsCancellationRequested)
                 {
                     _reader = new AudioFileReader(CurrentSong.FileInformation!.FullName);
-                    _output!.Init(_reader);
+                    if (_reader is not null)
+                    {
+                        _output!.Init(_reader);
+                        PlayableSong?.Invoke(this, true);
+                    }
                 }
             }
-
-            await Play();
-            await StartTimer();
         }
 
         private async Task Reset()
@@ -81,18 +104,40 @@ namespace Player
             _output = new WaveOutEvent();
         }
 
-        public async Task Play()
+        public async Task Play(double volume = 0.0)
         {
-            if (CurrentSong is null || _output is null)
+            if (CurrentSong is null || _output is null || fetchingStream)
                 return;
 
+            if (_reader is null && _streamReader is null)
+                await OnCurrentSongChange(CurrentSong, new CancellationTokenSource(TimeSpan.FromSeconds(3)).Token);
+
+            if (volume != 0.0)
+                _lastVolume = (float)volume;
+            else
+                _lastVolume = Volume;
+            _output.Volume = 0.0f;
             _output.Play();
+            await Task.Delay(500);
+            if (_cts is null)
+                _ = StartTimer();
+            if (_lastVolume > 0)
+            {
+                int fadeIn = 50;
+                float curStep = _lastVolume / (float)fadeIn;
+                for (int i = 0; i < fadeIn; i++)
+                {
+                    _output.Volume += Math.Min(curStep, _lastVolume - _output.Volume);
+                    await Task.Delay(10);
+                }
+            }
+            _lastVolume = 0.0f;
         }
 
         public async Task Stop()
         {
-            await StopMediaPlayback();
             _cts?.Cancel();
+            await StopMediaPlayback();
             _cts = null;
         }
 
@@ -105,9 +150,9 @@ namespace Player
             {
                 if (!noFadeOut)
                 {
-                    float curVol = _output.Volume;
+                    _lastVolume = _output.Volume;
                     int fadeOut = 250;
-                    float curStep = curVol / (float)fadeOut;
+                    float curStep = _lastVolume / (float)fadeOut;
                     for (int i = 0; i < fadeOut; i++)
                     {
                         _output.Volume -= Math.Min(curStep, _output.Volume);

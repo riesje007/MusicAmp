@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using TagLib;
 
 namespace PlaylistEditing
 {

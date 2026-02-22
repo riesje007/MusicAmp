@@ -20,6 +20,9 @@ namespace MusicAmp
             NowPlaying = new PlaylistItem(0, "Please open an audio file for playback", 0, new Uri("", UriKind.Relative));
             PlaylistControl.PlaylistItemDoubleClicked += PlaylistControl_ItemDoubleClicked;
             musicPlayer.PositionChanged += OnPositionChanged;
+            musicPlayer.ErrorOccurred += OnErrorOccurred;
+            musicPlayer.PlayableSong += OnPlayableSongSelected;
+            PlaylistControl.NewSelection += OnNewSelection;
         }
 
         public static readonly DependencyProperty NowPlayingProperty = DependencyProperty.Register(nameof(NowPlaying), typeof(PlaylistItem), typeof(MainWindow), new PropertyMetadata(new PlaylistItem(0, "Please open an audio file for playback", 0, new Uri("", UriKind.Relative))));
@@ -68,9 +71,28 @@ namespace MusicAmp
             WindowState = WindowState.Minimized;
         }
 
-        private void CloseWindow(object sender, RoutedEventArgs e)
+        private async void CloseWindow(object sender, RoutedEventArgs e)
         {
+            _ = FadeWindow();
+            await musicPlayer.Stop();
             Application.Current.Shutdown();
+        }
+
+        private async Task FadeWindow()
+        {
+            for (int i = 100; i > 0; i--)
+            {
+                double opacity = (double)i / 100.0;
+                this.Opacity = opacity;
+                await Task.Delay(20);
+            }
+        }
+
+        private async Task StartMusicPlayer()
+        {
+            if ((double)musicPlayer.Volume != VolumeControl.Value)
+                musicPlayer.Volume = (float)VolumeControl.Value;
+            await musicPlayer.Play(VolumeControl.Value);
         }
 
         private async void OnRadioSwitch(object sender, RoutedEventArgs e)
@@ -86,8 +108,7 @@ namespace MusicAmp
                     PauseBtn.IsChecked = false;
                     StopBtn.IsChecked = false;
 
-                    // ToDo: trigger play function of player
-                    await musicPlayer.Play();
+                    await StartMusicPlayer();
                 }
                 else if (rb == PauseBtn)
                 {
@@ -137,16 +158,83 @@ namespace MusicAmp
             }
         }
 
-        private void PlaylistControl_ItemDoubleClicked(object? sender, PlaylistItem item)
+        private async void PlaylistControl_ItemDoubleClicked(object? sender, PlaylistItem item)
         {
             NowPlaying = item;
             musicPlayer.CurrentSong = NowPlaying;
+            bool? prevState = PlayBtn.IsChecked;
+            PlayBtn.IsChecked = true;
+            if (prevState == true)
+                await musicPlayer.Play();
+            //OnRadioSwitch(PlayBtn, new RoutedEventArgs());
         }
 
         private void VolumeChange(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             musicPlayer.Volume = (float)e.NewValue;
             SongDisplayControl.Volume = e.NewValue;
+        }
+
+        private async void NextSong(object sender, RoutedEventArgs e)
+        {
+            var item = PlaylistControl.SelectNext();
+            if (item is not null && item != NowPlaying)
+            {
+                NowPlaying = item;
+                musicPlayer.CurrentSong = NowPlaying;
+                if (PlayBtn.IsChecked == true)
+                    await StartMusicPlayer();
+            }
+        }
+
+        private async void PreviousSong(object sender, RoutedEventArgs e)
+        {
+            var item = PlaylistControl.SelectPrevious();
+            if (item is not null && item != NowPlaying)
+            {
+                NowPlaying = item;
+                musicPlayer.CurrentSong = NowPlaying;
+                if (PlayBtn.IsChecked == true)
+                    await StartMusicPlayer();
+            }
+        }
+
+        private void OnErrorOccurred(object? sender, bool StopRequired)
+        {
+            if (StopRequired)
+            {
+                StopBtn.IsChecked = true;
+                PlayBtn.IsEnabled = false;
+                PauseBtn.IsEnabled = false;
+            }
+        }
+
+        private void OnPlayableSongSelected(object? sender, bool isPlayable)
+        {
+            if (isPlayable)
+            {
+                PlayBtn.IsEnabled = true;
+                PauseBtn.IsEnabled = true;
+            }
+        }
+
+        private void OnNewSelection(object? sender, PlaylistItem? item)
+        {
+            if (item == NowPlaying)
+                return;
+
+            if (item is null)
+            {
+                NowPlaying = new PlaylistItem(0, "Please open an audio file for playback", 0, new Uri("", UriKind.Relative));
+                PlayBtn.IsEnabled = false;
+                PauseBtn?.IsEnabled = false;
+            }
+            else
+            {
+                PlayBtn.IsEnabled = true;
+                PauseBtn?.IsEnabled = true;
+                NowPlaying = item;
+            }
         }
     }
 }

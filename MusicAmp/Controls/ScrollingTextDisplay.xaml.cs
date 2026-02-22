@@ -1,7 +1,7 @@
-﻿using System.ComponentModel;
-using System.Diagnostics;
+﻿using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 
 namespace MusicAmp.Controls
@@ -12,6 +12,7 @@ namespace MusicAmp.Controls
     public partial class ScrollingTextDisplay : UserControl
     {
         private Storyboard? _scrollingStoryboard = null;
+        private DoubleAnimationUsingKeyFrames? animation;
         public ScrollingTextDisplay()
         {
             InitializeComponent();
@@ -24,7 +25,7 @@ namespace MusicAmp.Controls
             if (d is ScrollingTextDisplay control)
             {
                 // Ensure scrolling is updated on the UI thread after layout has a chance to run
-                control.Dispatcher.BeginInvoke((System.Action)control.UpdateScrolling, System.Windows.Threading.DispatcherPriority.Loaded);
+                control.Dispatcher.BeginInvoke(() => control.ScrollingTextDisplaySizeChanged(control, new RoutedEventArgs() as SizeChangedEventArgs));
             }
         }
 
@@ -34,7 +35,7 @@ namespace MusicAmp.Controls
             set { SetValue(DisplayTextProperty, value); }
         }
 
-        private void ScrollingTetDisplaySizeChanged(object sender, SizeChangedEventArgs e)
+        private void ScrollingTextDisplaySizeChanged(object sender, SizeChangedEventArgs e)
         {
             ClipGeometry.Rect = new Rect(0, 0, RootGrid.ActualWidth, RootGrid.ActualHeight);
             UpdateScrolling();
@@ -42,6 +43,7 @@ namespace MusicAmp.Controls
 
         private void UpdateScrolling()
         {
+            StopScrolling();
             if (string.IsNullOrEmpty(DisplayText))
             {
                 StopScrolling();
@@ -51,9 +53,12 @@ namespace MusicAmp.Controls
 
 
             // Force measure to get actual text width
-            TitleBox.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            TitleBox.Width = TitleBox.DesiredSize.Width;
-            double textWidth = TitleBox.DesiredSize.Width;
+            var ft = new FormattedText(TitleBox.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                new Typeface(TitleBox.FontFamily, TitleBox.FontStyle, TitleBox.FontWeight, TitleBox.FontStretch),
+                TitleBox.FontSize, TitleBox.Foreground, VisualTreeHelper.GetDpi(this).PixelsPerDip);
+            TitleBox.Width = ft.WidthIncludingTrailingWhitespace + 10;
+            TitleBox.Height = ft.Height;
+            double textWidth = ft.WidthIncludingTrailingWhitespace + 10;
             double controlWidth = RootGrid.ActualWidth;
 
             // Center vertically within the control by positioning the TextBlock on the Canvas
@@ -88,7 +93,7 @@ namespace MusicAmp.Controls
             double duration = Math.Abs(offset / targetSpeed);
             var ease = new SineEase() { EasingMode = EasingMode.EaseInOut };
 
-            var animation = new DoubleAnimationUsingKeyFrames()
+            animation = new DoubleAnimationUsingKeyFrames()
             {
                 KeyFrames =
                 {
@@ -117,6 +122,12 @@ namespace MusicAmp.Controls
         private void StopScrolling()
         {
             _scrollingStoryboard?.Stop();
+            if (animation is not null && _scrollingStoryboard is not null)
+                _scrollingStoryboard?.Children?.Remove(animation);
+
+            TitleBoxTransform.BeginAnimation(TranslateTransform.XProperty, null);
+            TitleBoxTransform.X = 0;
+            //TextHost.RenderTransform.Transform(new Point(0, 0));
             _scrollingStoryboard = null;
         }
 

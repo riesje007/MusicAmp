@@ -123,9 +123,9 @@
                     <TextBlock Text="&#xE895;" Foreground="{Binding Foreground}" />
                 </Button>
             </StackPanel>
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" >
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" x:Name="PlaylistScroller" >
                 <ListView ItemsSource="{Binding Path=SongPlaylist, Mode=OneWay}" Foreground="{Binding Foreground}" Background="#90000000" x:Name="PlayListView" 
-                          SelectionMode="Extended"  >
+                          SelectionMode="Extended" PreviewMouseWheel="PlayListViewScrolling" SelectionChanged="PlaylistSelectionChanged" >
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
                             <Setter Property="Padding" Value="0" />
