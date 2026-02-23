@@ -38,6 +38,7 @@ namespace PlaylistEditing
             {
                 field = value;
                 OnPropertyChanged(nameof(FileInformation));
+                OnPropertyChanged(nameof(PlaylistItemDisplay));
             }
         }
 
@@ -48,6 +49,7 @@ namespace PlaylistEditing
             {
                 field = value;
                 OnPropertyChanged(nameof(StreamUri));
+                OnPropertyChanged(nameof(PlaylistItemDisplay));
             }
         }
 
@@ -60,6 +62,7 @@ namespace PlaylistEditing
                 {
                     field = value;
                     OnPropertyChanged(nameof(SongTitle));
+                    OnPropertyChanged(nameof(PlaylistItemDisplay));
                 }
                 else if (value.StartsWith("http", StringComparison.OrdinalIgnoreCase))
                 {
@@ -81,6 +84,7 @@ namespace PlaylistEditing
                         field = StreamUri!.OriginalString;
 
                 OnPropertyChanged(nameof(SongArtist));
+                OnPropertyChanged(nameof(PlaylistItemDisplay));
             }
         } = string.Empty;
 
@@ -104,6 +108,8 @@ namespace PlaylistEditing
             {
                 field = value;
                 OnPropertyChanged(nameof(SongDurationSeconds));
+                OnPropertyChanged(nameof(DurationTextMinutes));
+                OnPropertyChanged(nameof(DurationTime));
             }
         } = 0;
 
@@ -114,6 +120,8 @@ namespace PlaylistEditing
             {
                 field = value;
                 OnPropertyChanged(nameof(SongTrackNumber));
+                OnPropertyChanged(nameof(SongTrack));
+                OnPropertyChanged(nameof(PlaylistItemDisplay));
             }
         } = 0;
 

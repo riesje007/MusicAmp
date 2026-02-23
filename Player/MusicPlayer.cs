@@ -12,6 +12,8 @@ namespace Player
         public event EventHandler<bool>? PlayableSong;
         private bool fetchingStream = false;
 
+        public bool IsPlaying => _output is not null && _output.PlaybackState == PlaybackState.Playing;
+
         public PlaylistItem? CurrentSong
         {
             get => field;
@@ -102,6 +104,37 @@ namespace Player
         public MusicPlayer()
         {
             _output = new WaveOutEvent();
+        }
+
+        /// <summary>
+        /// Seek to the specified position in the current track if supported.
+        /// </summary>
+        /// <param name="position">Position to seek to.</param>
+        public void Seek(TimeSpan position)
+        {
+            // Clamp to available length if possible
+            try
+            {
+                if (_reader is not null)
+                {
+                    var length = _reader.TotalTime;
+                    if (position < TimeSpan.Zero) position = TimeSpan.Zero;
+                    if (position > length) position = length;
+                    _reader.CurrentTime = position;
+                }
+                //else if (_streamReader is not null)
+                //{
+                //    // MediaFoundationReader supports seeking for seekable sources
+                //    var length = _streamReader.TotalTime;
+                //    if (position < TimeSpan.Zero) position = TimeSpan.Zero;
+                //    if (position > length) position = length;
+                //    _streamReader.CurrentTime = position;
+                //}
+            }
+            catch
+            {
+                // Ignore seek failures (e.g., non-seekable stream)
+            }
         }
 
         public async Task Play(double volume = 0.0)

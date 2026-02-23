@@ -109,7 +109,7 @@ namespace MusicAmp.Controls
                 else
                     return;
             }
-            //SongPlaylist.SavePlaylist(PlaylistFile.FullName);
+            SongPlaylist.SavePlaylist(PlaylistFile);
         }
 
         private async void SavePlaylistAsClicked(object sender, RoutedEventArgs e)

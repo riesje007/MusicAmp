@@ -40,7 +40,7 @@ namespace PlaylistEditing
                         PlaylistItem? item = GetItem(tag, location, playlistFile);
                         if (item is not null)
                             playlist.AddItem(item);
-                        }
+                    }
                 }
                 catch (IOException) { }
             }
@@ -91,6 +91,41 @@ namespace PlaylistEditing
                 SongArtist = Path.IsPathRooted(location) ? locationInfo.Name : newLocation.Name,
                 SongTrackNumber = 0
             };
+        }
+
+        public void SavePlaylist(FileInfo fileInformation)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using (StreamWriter sw = new StreamWriter(ms))
+                {
+                    sw.WriteLine("#EXTM3U");
+                    foreach (var item in _items)
+                    {
+                        PlaylistItem pi = item.Value;
+                        if (pi.SongTitle == FileNotFoundTitle)
+                            continue;
+                        if (pi.IsStream)
+                        {
+                            sw.WriteLine($"#EXTINF:-1,{pi.SongTitle}");
+                            sw.WriteLine(pi.StreamUri!.OriginalString);
+                        }
+                        else
+                        {
+                            sw.WriteLine($"#EXTINF:{pi.SongDurationSeconds:0},{pi.SongArtist} - {pi.SongTitle}");
+                            string relativePath = Path.GetRelativePath(fileInformation.DirectoryName ?? string.Empty, pi.FileInformation!.FullName);
+                            sw.WriteLine(relativePath);
+                        }
+                    }
+                    sw.Flush();
+                }
+                File.WriteAllText(fileInformation.FullName, Encoding.UTF8.GetString(ms.ToArray()));
+            }
+        }
+
+        private static PlaylistItem CreateItem(Uri uri, string stationName)
+        {
+            return new PlaylistItem(0, stationName, 0, uri);
         }
 
         public IList<int> Keys => _items.Keys;

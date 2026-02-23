@@ -6,8 +6,9 @@
         xmlns:local="clr-namespace:MusicAmp" 
         xmlns:controls="clr-namespace:MusicAmp.Controls"
         mc:Ignorable="d" AllowsTransparency="True" Background="Transparent" WindowStyle="None"
-        Icon="/Assets/MusicPlayer.ico"
-        Title="MainWindow" Height="250" Width="800">
+        Icon="/Assets/MusicPlayer.ico" ResizeMode="CanResizeWithGrip"
+        Deactivated="OnFocusLost" MouseEnter="OnHover" MouseLeave="OnMouseLeave" Activated="OnFocus"
+        Title="MainWindow" Height="250" Width="880">
     <Window.Resources>
         <CornerRadius x:Key="DefaultBorderRadius" TopLeft="20" TopRight="5" BottomRight="20" BottomLeft="5" />
     </Window.Resources>
@@ -47,13 +48,15 @@
                 </Border>
                 <Grid Margin="10 3 5 3">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="40" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="40" />
                         <ColumnDefinition Width="40" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="MusicAmp" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="White" FontFamily="Segoe UI" FontSize="16" FontWeight="Bold"/>
-                    <Button x:Name="MinimizeButton" Grid.Column="1" Content="&#x2013;" Click="MinimizeWindow" Background="SkyBlue" BorderBrush="Transparent" Foreground="White" FontSize="16" Margin="2 0" />
-                    <Button x:Name="CloseButton" Grid.Column="2" Content="&#x2715;" Click="CloseWindow" Background="Crimson" BorderBrush="Transparent" Foreground="White" FontSize="16" Margin="2 0" />
+                    <Image Source="/Assets/MusicPlayer.ico" Grid.Column="0" />
+                    <TextBlock Text="MusicAmp" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="White" FontFamily="Segoe UI" FontSize="16" FontWeight="Bold" Grid.Column="1" />
+                    <Button x:Name="MinimizeButton" Grid.Column="2" Content="&#x2013;" Click="MinimizeWindow" Background="SkyBlue" BorderBrush="Transparent" Foreground="White" FontSize="16" Margin="2 0" />
+                    <Button x:Name="CloseButton" Grid.Column="3" Content="&#x2715;" Click="CloseWindow" Background="Crimson" BorderBrush="Transparent" Foreground="White" FontSize="16" Margin="2 0" />
                 </Grid>
             </Grid>
         </Border>
@@ -61,8 +64,9 @@
             <Grid.Resources>
                 <Style TargetType="RadioButton" x:Key="PlayButton">
                     <Setter Property="HorizontalAlignment" Value="Left" />
-                    <Setter Property="MinHeight" Value="0" />
-                    <Setter Property="MinWidth" Value="0" />
+                    <Setter Property="MinHeight" Value="50" />
+                    <Setter Property="MinWidth" Value="50" />
+                    <Setter Property="FontSize" Value="24" />
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="RadioButton">
@@ -107,14 +111,14 @@
                                             </VisualState>
                                         </VisualStateGroup>
                                     </VisualStateManager.VisualStateGroups>
-                                    <Ellipse Fill="{TemplateBinding Background}" Width="30" Height="30" />
-                                    <Ellipse Fill="#80FFFF90" Width="30" Height="30" x:Name="lighten" Opacity="0" />
-                                    <Ellipse Fill="#80909090" Width="30" Height="30" x:Name="darken" Opacity="0" />
+                                    <Ellipse Fill="{TemplateBinding Background}" Width="50" Height="50" />
+                                    <Ellipse Fill="#80FFFF90" Width="50" Height="50" x:Name="lighten" Opacity="0" />
+                                    <Ellipse Fill="#80909090" Width="50" Height="50" x:Name="darken" Opacity="0" />
                                     <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="ToggleOn" Text="{TemplateBinding Tag}"
-                                    FontFamily="Segoe Fluent Icons" FontSize="18" FontWeight="Black" Foreground="{TemplateBinding Foreground}" Opacity="0"  />
+                                    FontFamily="Segoe Fluent Icons" FontWeight="Black" Foreground="{TemplateBinding Foreground}" Opacity="0"  />
                                     <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="ToggleOff" Text="{TemplateBinding Content}"
-                                    FontFamily="Segoe Fluent Icons" FontSize="18" FontWeight="Black" Foreground="{TemplateBinding Foreground}"  Opacity="1" />
-                                    <Ellipse Width="20" Height="18" HorizontalAlignment="Center" VerticalAlignment="Top">
+                                    FontFamily="Segoe Fluent Icons" FontWeight="Black" Foreground="{TemplateBinding Foreground}"  Opacity="1" />
+                                    <Ellipse Width="40" Height="30" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="3">
                                         <Ellipse.Fill>
                                             <LinearGradientBrush StartPoint="0.5 0" EndPoint="0.5 1">
                                                 <GradientStop Offset="0" Color="#30FFFFFF" />
@@ -129,6 +133,7 @@
                     </Setter>
                 </Style>
                 <Style TargetType="Button" x:Key="NextButton">
+                    <Setter Property="FontSize" Value="24" />
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="Button">
@@ -157,14 +162,14 @@
                                             </VisualState>
                                         </VisualStateGroup>
                                     </VisualStateManager.VisualStateGroups>
-                                    <Ellipse Fill="{TemplateBinding Background}" Width="30" Height="30" />
-                                    <Ellipse Fill="#80FFFF90" Width="30" Height="30" x:Name="lighten" Opacity="0" />
-                                    <Ellipse Fill="#80909090" Width="30" Height="30" x:Name="darken" Opacity="0" />
+                                    <Ellipse Fill="{TemplateBinding Background}" Width="50" Height="50" />
+                                    <Ellipse Fill="#80FFFF90" Width="50" Height="50" x:Name="lighten" Opacity="0" />
+                                    <Ellipse Fill="#80909090" Width="50" Height="50" x:Name="darken" Opacity="0" />
                                     <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="Glow" Text="{TemplateBinding Tag}"
-                                    FontFamily="Segoe Fluent Icons" FontSize="18" FontWeight="Black" Foreground="{TemplateBinding Foreground}" Opacity="0"  />
+                                    FontFamily="Segoe Fluent Icons" FontWeight="Black" Foreground="{TemplateBinding Foreground}" Opacity="0"  />
                                     <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="Unglow" Text="{TemplateBinding Content}"
-                                    FontFamily="Segoe Fluent Icons" FontSize="18" FontWeight="Black" Foreground="{TemplateBinding Foreground}"  Opacity="1" />
-                                    <Ellipse Width="20" Height="18" HorizontalAlignment="Center" VerticalAlignment="Top">
+                                    FontFamily="Segoe Fluent Icons" FontWeight="Black" Foreground="{TemplateBinding Foreground}"  Opacity="1" />
+                                    <Ellipse Width="40" Height="30" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="3">
                                         <Ellipse.Fill>
                                             <LinearGradientBrush StartPoint="0.5 0" EndPoint="0.5 1">
                                                 <GradientStop Offset="0" Color="#30FFFFFF" />
@@ -191,9 +196,10 @@
                 </Grid.RowDefinitions>
                 <controls:SongDisplay CurrentSong="{Binding NowPlaying, RelativeSource={RelativeSource AncestorType=Window}}" Background="DarkBlue"
                       x:Name="SongDisplayControl" Margin="10" Foreground="BlanchedAlmond" />
-                <Grid Grid.Row="1" Margin="5">
-                    <Slider HorizontalAlignment="Stretch" Height="20" x:Name="TrackSlider" Minimum="0"
-                                Maximum="{Binding NowPlaying.SongDurationSeconds}" IsEnabled="False" Margin="5 0 5 5" />
+                <Grid Grid.Row="1" Margin="5" >
+                    <Slider HorizontalAlignment="Stretch" Height="20" x:Name="TrackSlider" Minimum="0" PreviewMouseLeftButtonUp="TrackSlider_MouseLeftButtonUp"
+                                Maximum="{Binding NowPlaying.SongDurationSeconds}" IsEnabled="False" Margin="5 0 5 5"
+                            Thumb.DragStarted="TrackSlider_DragStarted" Thumb.DragCompleted="TrackSlider_DragCompleted" />
                 </Grid>
                 <Grid Grid.Row="2" Margin="5 5 5 10">
                     <Grid.ColumnDefinitions>
@@ -207,7 +213,7 @@
                         <RadioButton Content="&#xE739;" Foreground="DarkRed" Background="#20FFFFFF" Style="{StaticResource PlayButton}" Tag="&#xE73B;" GroupName="playing" Checked="OnRadioSwitch" x:Name="StopBtn" />
                         <Button Content="&#xE893;" Foreground="Blue" Background="#20FFFFFF" Style="{StaticResource NextButton}" Tag="&#xE623;" Click="NextSong" />
                     </StackPanel>
-                    <Slider Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}" ValueChanged="VolumeChange" IsEnabled="False" x:Name="VolumeControl" />
+                    <Slider Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}" ValueChanged="VolumeChange" IsEnabled="False" x:Name="VolumeControl" Margin="10" />
                 </Grid>
             </Grid>
             <controls:PlaylistControl x:Name="PlaylistControl" Grid.Column="1" Margin="10" Foreground="BlanchedAlmond" Background="DarkBlue" Opacity="0.9" />

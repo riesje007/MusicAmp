@@ -128,9 +128,6 @@
                           SelectionMode="Extended" PreviewMouseWheel="PlayListViewScrolling" SelectionChanged="PlaylistSelectionChanged" >
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
-                            <Setter Property="Padding" Value="0" />
-                            <Setter Property="MinHeight" Value="0" />
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                             <Setter Property="VerticalAlignment" Value="Center" />
                             <Setter Property="Template">
                                 <Setter.Value>
