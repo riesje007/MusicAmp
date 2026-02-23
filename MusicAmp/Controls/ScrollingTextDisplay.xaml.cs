@@ -25,7 +25,7 @@ namespace MusicAmp.Controls
             if (d is ScrollingTextDisplay control)
             {
                 // Ensure scrolling is updated on the UI thread after layout has a chance to run
-                control.Dispatcher.BeginInvoke(() => control.ScrollingTextDisplaySizeChanged(control, new RoutedEventArgs() as SizeChangedEventArgs));
+                control.Dispatcher.BeginInvoke(() => control.ScrollingTextDisplaySizeChanged(control, null!));
             }
         }
 
@@ -124,7 +124,7 @@ namespace MusicAmp.Controls
             _scrollingStoryboard?.Stop();
             if (animation is not null && _scrollingStoryboard is not null)
                 _scrollingStoryboard?.Children?.Remove(animation);
-
+            animation = null;
             TitleBoxTransform.BeginAnimation(TranslateTransform.XProperty, null);
             TitleBoxTransform.X = 0;
             //TextHost.RenderTransform.Transform(new Point(0, 0));

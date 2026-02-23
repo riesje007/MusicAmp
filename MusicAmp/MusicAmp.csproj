@@ -6,7 +6,16 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>MusicPlayer.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\MusicPlayer.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="MusicPlayer.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="WindowsAPICodePack" Version="8.0.14" />
@@ -15,6 +24,12 @@
   <ItemGroup>
     <ProjectReference Include="..\Player\Player.csproj" />
     <ProjectReference Include="..\PlaylistEditing\PlaylistEditing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\MusicPlayer.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>

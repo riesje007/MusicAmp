@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:MusicAmp" 
         xmlns:controls="clr-namespace:MusicAmp.Controls"
         mc:Ignorable="d" AllowsTransparency="True" Background="Transparent" WindowStyle="None"
+        Icon="/Assets/MusicPlayer.ico"
         Title="MainWindow" Height="250" Width="800">
     <Window.Resources>
         <CornerRadius x:Key="DefaultBorderRadius" TopLeft="20" TopRight="5" BottomRight="20" BottomLeft="5" />
@@ -200,11 +201,11 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" Margin="4 0 4 4" x:Name="ControlStack" HorizontalAlignment="Center">
-                        <Button Content="&#xE892;" Foreground="Blue" Background="#20FFFFFF" Style="{StaticResource NextButton}" Tag="&#xE622;" Click="PreviousSong" IsEnabled="False" />
-                        <RadioButton Content="&#xE768;" Foreground="Green" Background="#20FFFFFF" Style="{StaticResource PlayButton}" Tag="&#xEDDA;" GroupName="playing" Checked="OnRadioSwitch" x:Name="PlayBtn" Click="OffRadioSwitch" IsEnabled="False" />
-                        <RadioButton Content="&#xE769;" Foreground="Orange" Background="#20FFFFFF" Style="{StaticResource PlayButton}" Tag="&#xE62E;" GroupName="playing" Checked="OnRadioSwitch" x:Name="PauseBtn" Click="OffRadioSwitch" IsEnabled="False" />
+                        <Button Content="&#xE892;" Foreground="Blue" Background="#20FFFFFF" Style="{StaticResource NextButton}" Tag="&#xE622;" Click="PreviousSong"  />
+                        <RadioButton Content="&#xE768;" Foreground="Green" Background="#20FFFFFF" Style="{StaticResource PlayButton}" Tag="&#xEDDA;" GroupName="playing" Checked="OnRadioSwitch" x:Name="PlayBtn" Click="OffRadioSwitch" />
+                        <RadioButton Content="&#xE769;" Foreground="Orange" Background="#20FFFFFF" Style="{StaticResource PlayButton}" Tag="&#xE62E;" GroupName="playing" Checked="OnRadioSwitch" x:Name="PauseBtn" Click="OffRadioSwitch" />
                         <RadioButton Content="&#xE739;" Foreground="DarkRed" Background="#20FFFFFF" Style="{StaticResource PlayButton}" Tag="&#xE73B;" GroupName="playing" Checked="OnRadioSwitch" x:Name="StopBtn" />
-                        <Button Content="&#xE893;" Foreground="Blue" Background="#20FFFFFF" Style="{StaticResource NextButton}" Tag="&#xE623;" Click="NextSong" IsEnabled="False" />
+                        <Button Content="&#xE893;" Foreground="Blue" Background="#20FFFFFF" Style="{StaticResource NextButton}" Tag="&#xE623;" Click="NextSong" />
                     </StackPanel>
                     <Slider Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}" ValueChanged="VolumeChange" IsEnabled="False" x:Name="VolumeControl" />
                 </Grid>
