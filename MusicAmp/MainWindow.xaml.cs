@@ -5,7 +5,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using Player;
 using System.Windows.Media.Animation;
-using System.Windows.Media;
+using System.Windows.Interop;
 
 namespace MusicAmp
 {
@@ -34,6 +34,11 @@ namespace MusicAmp
             musicPlayer.PlayableSong += OnPlayableSongSelected;
             PlaylistControl.NewSelection += OnNewSelection;
             PresetAnimations();
+            KeyboardMediaHookService.NextButtonPress += OnNextPress;
+            KeyboardMediaHookService.PrevButtonPress += OnPreviousPress;
+            KeyboardMediaHookService.PlayButtonPress += OnPlayPausePress;
+            KeyboardMediaHookService.StopButtonPress += OnStopPress;
+            KeyboardMediaHookService.StartHook();
         }
 
         public static readonly DependencyProperty NowPlayingProperty = DependencyProperty.Register(nameof(NowPlaying), typeof(PlaylistItem), typeof(MainWindow), new PropertyMetadata(new PlaylistItem(0, "Please open an audio file for playback", 0, new Uri("", UriKind.Relative))));
@@ -130,6 +135,11 @@ namespace MusicAmp
 
         private async void CloseWindow(object sender, RoutedEventArgs e)
         {
+            KeyboardMediaHookService.NextButtonPress -= OnNextPress;
+            KeyboardMediaHookService.PrevButtonPress -= OnPreviousPress;
+            KeyboardMediaHookService.PlayButtonPress -= OnPlayPausePress;
+            KeyboardMediaHookService.StopButtonPress -= OnStopPress;
+            KeyboardMediaHookService.StopHook();
             var fadeTask = FadeWindow();
             await musicPlayer.Stop();
             await fadeTask;
@@ -346,6 +356,37 @@ namespace MusicAmp
             _windowAnimation!.To = IsActive ? _focusOpacity : _nonFocusOpacity;
             _windowAnimation.Duration = new Duration(TimeSpan.FromSeconds(_isActive ? 0.2 : 1.5));
             _storyboard!.Begin();
+        }
+
+        private async void OnPlayPausePress(object? sender, RoutedEventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                if (musicPlayer.IsPlaying)
+                {
+                    if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+                        StopBtn.IsChecked = true;
+                    else
+                        PauseBtn.IsChecked = true;
+                }
+                else
+                    PlayBtn.IsChecked = true;
+            });
+        }
+
+        private async void OnNextPress(object? sender, RoutedEventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() => NextSong(this, new RoutedEventArgs()));
+        }
+
+        private async void OnPreviousPress(object? sender, RoutedEventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() => PreviousSong(this, new RoutedEventArgs()));
+        }
+
+        private async void OnStopPress(object? sender, RoutedEventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() => StopBtn.IsChecked = true);
         }
     }
 }

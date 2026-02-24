@@ -59,15 +59,22 @@ namespace Player
 
                 if (CurrentSong.IsStream && !token.IsCancellationRequested)
                 {
-                    try
+                    bool succeeded = false;
+                    for (int i = 0; i < 3; i++)
                     {
-                        _streamReader = await Task.Run(() => new MediaFoundationReader(CurrentSong.StreamUri!.OriginalString), token);
+                        try
+                        {
+                            _streamReader = await Task.Run(() => new MediaFoundationReader(CurrentSong.StreamUri!.OriginalString), token);
+                            succeeded = true;
+                            break;
+                        }
+                        catch
+                        {
+                            _streamReader = null;
+                        }
                     }
-                    catch 
-                    { 
-                        _streamReader = null; 
-                        ErrorOccurred?.Invoke(this, true); 
-                    }
+                    if (!succeeded)
+                        ErrorOccurred?.Invoke(this, true);
 
                     if (_streamReader is not null)
                     {
