@@ -392,6 +392,8 @@ namespace MusicAmp
             PlayBtn.IsEnabled = false;
             PauseBtn.IsEnabled = false;
             StopBtn.IsEnabled = false;
+            PrevBtn.IsEnabled = false;
+            NextBtn.IsEnabled = false;
 
             if (musicPlayer.IsPlaying || musicPlayer.CurrentSong?.FileInformation is not null || !string.IsNullOrEmpty(musicPlayer.CurrentSong?.StreamUri?.OriginalString))
             {
@@ -405,6 +407,8 @@ namespace MusicAmp
             PlayBtn.IsEnabled = true;
             PauseBtn.IsEnabled = true;
             StopBtn.IsEnabled = true;
+            PrevBtn.IsEnabled = true;
+            NextBtn.IsEnabled = true;
         }
     }
 }
