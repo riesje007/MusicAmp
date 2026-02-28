@@ -123,11 +123,6 @@ namespace PlaylistEditing
             }
         }
 
-        private static PlaylistItem CreateItem(Uri uri, string stationName)
-        {
-            return new PlaylistItem(0, stationName, 0, uri);
-        }
-
         public IList<int> Keys => _items.Keys;
         public IList<PlaylistItem> Values => _items.Values;
 
@@ -166,7 +161,20 @@ namespace PlaylistEditing
                     Count = _items.Count;
                 }
             }
-
+            if (removed)
+            {
+                SortedList<int, PlaylistItem> newItems = new SortedList<int, PlaylistItem>();
+                int counter = 1;
+                foreach (var it in _items)
+                {
+                    PlaylistItem newItem = it.Value;
+                    newItem.SongTrackNumber = counter;
+                    newItems.Add(counter, newItem);
+                    counter++;
+                }
+                _items = newItems;
+                CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            }
             return removed;
         }
 
@@ -198,7 +206,7 @@ namespace PlaylistEditing
             return updated;
         }
 
-        public bool SwapItems(int key1, int key2)
+        private bool SwapItems(int key1, int key2)
         {
             bool success = false;
             if (_items.ContainsKey(key1) && _items.ContainsKey(key2))
@@ -224,6 +232,11 @@ namespace PlaylistEditing
 
         public bool MoveItem(int oldKey, int newKey)
         {
+            if (!_items.ContainsKey(0))
+            {
+                oldKey++;
+                newKey++;
+            }
             bool success = _items.ContainsKey(oldKey) && _items.ContainsKey(newKey);
 
             if (success)
@@ -238,6 +251,24 @@ namespace PlaylistEditing
             }
 
             return success;
+        }
+
+        public void Randomize()
+        {
+            SortedList<int, PlaylistItem> newItems = new SortedList<int, PlaylistItem>();
+            int rnd = 0;
+            foreach (var item in _items)
+            {
+                do
+                {
+                    rnd = Random.Shared.Next(1, _items.Count + 1);
+                } while (newItems.ContainsKey(rnd));
+                PlaylistItem newItem = item.Value;
+                newItem.SongTrackNumber = rnd;
+                newItems.Add(rnd, newItem);
+            }
+            _items = newItems;
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
         public IEnumerator<PlaylistItem> GetEnumerator()

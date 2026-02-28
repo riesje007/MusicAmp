@@ -77,12 +77,14 @@
                                                 <Storyboard>
                                                     <DoubleAnimation Storyboard.TargetName="ToggleOn" Storyboard.TargetProperty="Opacity" To="1.0" Duration="0:0:0.4" />
                                                     <DoubleAnimation Storyboard.TargetName="ToggleOff" Storyboard.TargetProperty="Opacity" To="0.0" Duration="0:0:0.4" />
+                                                    <DoubleAnimation Storyboard.TargetName="Colorize" Storyboard.TargetProperty="Opacity" To="0.3" Duration="0:0:0.5" />
                                                 </Storyboard>
                                             </VisualState>
                                             <VisualState x:Name="Unchecked">
                                                 <Storyboard>
                                                     <DoubleAnimation Storyboard.TargetName="ToggleOn" Storyboard.TargetProperty="Opacity" To="0.0" Duration="0:0:0.4" />
                                                     <DoubleAnimation Storyboard.TargetName="ToggleOff" Storyboard.TargetProperty="Opacity" To="1.0" Duration="0:0:0.4" />
+                                                    <DoubleAnimation Storyboard.TargetName="Colorize" Storyboard.TargetProperty="Opacity" To="0.0" Duration="0:0:0.5" />
                                                 </Storyboard>
                                             </VisualState>
                                             <VisualState x:Name="Indeterminate">
@@ -92,8 +94,13 @@
                                             </VisualState>
                                         </VisualStateGroup>
                                         <VisualStateGroup x:Name="CommonStates">
-                                            <VisualState x:Name="Normal" />
-                                            <VisualState x:Name="PointerOver">
+                                            <VisualState x:Name="Normal">
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetName="darken" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3" />
+                                                    <DoubleAnimation Storyboard.TargetName="lighten" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3" />
+                                                </Storyboard>
+                                            </VisualState>
+                                            <VisualState x:Name="MouseOver">
                                                 <Storyboard>
                                                     <DoubleAnimation Storyboard.TargetName="lighten" Storyboard.TargetProperty="Opacity" To="0.5" Duration="0:0:0.5" />
                                                 </Storyboard>
@@ -106,14 +113,15 @@
                                             <VisualState x:Name="Disabled">
                                                 <Storyboard>
                                                     <DoubleAnimation Storyboard.TargetName="darken" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:1" />
-                                                    <DoubleAnimation Storyboard.TargetName="lighten" Storyboard.TargetProperty="Opacity" To="0.0" Duration="0:0:0.1" />
+                                                    <DoubleAnimation Storyboard.TargetName="lighten" Storyboard.TargetProperty="Opacity" To="0.0" Duration="0:0:0.2" />
                                                 </Storyboard>
                                             </VisualState>
                                         </VisualStateGroup>
                                     </VisualStateManager.VisualStateGroups>
                                     <Ellipse Fill="{TemplateBinding Background}" Width="50" Height="50" />
                                     <Ellipse Fill="#80FFFF90" Width="50" Height="50" x:Name="lighten" Opacity="0" />
-                                    <Ellipse Fill="#80909090" Width="50" Height="50" x:Name="darken" Opacity="0" />
+                                    <Ellipse Fill="#C0606060" Width="50" Height="50" x:Name="darken" Opacity="0" />
+                                    <Ellipse Fill="{TemplateBinding Foreground}" Height="50" Width="50" x:Name="Colorize" Opacity="0" />
                                     <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="ToggleOn" Text="{TemplateBinding Tag}"
                                     FontFamily="Segoe Fluent Icons" FontWeight="Black" Foreground="{TemplateBinding Foreground}" Opacity="0"  />
                                     <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="ToggleOff" Text="{TemplateBinding Content}"
@@ -140,8 +148,13 @@
                                 <Grid Margin="2" Background="Transparent" x:Name="Root">
                                     <VisualStateManager.VisualStateGroups>
                                         <VisualStateGroup x:Name="CommonStates">
-                                            <VisualState x:Name="Normal" />
-                                            <VisualState x:Name="PointerOver">
+                                            <VisualState x:Name="Normal" >
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetName="lighten" Storyboard.TargetProperty="Opacity" To="0.0" Duration="0:0:0.3" />
+                                                    <DoubleAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="Opacity" To="0.0" Duration="0:0:0.3" />
+                                                </Storyboard>
+                                            </VisualState>
+                                            <VisualState x:Name="MouseOver">
                                                 <Storyboard>
                                                     <DoubleAnimation Storyboard.TargetName="lighten" Storyboard.TargetProperty="Opacity" To="0.5" Duration="0:0:0.5" />
                                                     <DoubleAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="Opacity" To="0.3" Duration="0:0:0.5" />
@@ -207,11 +220,11 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" Margin="4 0 4 4" x:Name="ControlStack" HorizontalAlignment="Center">
-                        <Button Content="&#xE892;" Foreground="Blue" Background="#20FFFFFF" Style="{StaticResource NextButton}" Tag="&#xE622;" Click="PreviousSong"  />
-                        <RadioButton Content="&#xE768;" Foreground="Green" Background="#20FFFFFF" Style="{StaticResource PlayButton}" Tag="&#xEDDA;" GroupName="playing" Checked="OnRadioSwitch" x:Name="PlayBtn" Click="OffRadioSwitch" />
-                        <RadioButton Content="&#xE769;" Foreground="Orange" Background="#20FFFFFF" Style="{StaticResource PlayButton}" Tag="&#xE62E;" GroupName="playing" Checked="OnRadioSwitch" x:Name="PauseBtn" Click="OffRadioSwitch" />
-                        <RadioButton Content="&#xE739;" Foreground="DarkRed" Background="#20FFFFFF" Style="{StaticResource PlayButton}" Tag="&#xE73B;" GroupName="playing" Checked="OnRadioSwitch" x:Name="StopBtn" />
-                        <Button Content="&#xE893;" Foreground="Blue" Background="#20FFFFFF" Style="{StaticResource NextButton}" Tag="&#xE623;" Click="NextSong" />
+                        <Button Content="&#xE892;" Foreground="Blue" Background="#20FFFFFF" Style="{StaticResource NextButton}" Tag="&#xE622;" Click="OnPreviousSong" IsEnabled="False" x:Name="PrevBtn" />
+                        <RadioButton Content="&#xE768;" Foreground="Green" Background="#20FFFFFF" Style="{StaticResource PlayButton}" Tag="&#xEDDA;" GroupName="playing" x:Name="PlayBtn" Click="OnRadioSwitch" IsEnabled="False" />
+                        <RadioButton Content="&#xE769;" Foreground="Orange" Background="#20FFFFFF" Style="{StaticResource PlayButton}" Tag="&#xE62E;" GroupName="playing" x:Name="PauseBtn" Click="OnRadioSwitch" IsEnabled="False" />
+                        <RadioButton Content="&#xE739;" Foreground="DarkRed" Background="#20FFFFFF" Style="{StaticResource PlayButton}" Tag="&#xE73B;" GroupName="playing" x:Name="StopBtn" Click="OnRadioSwitch" IsEnabled="False" />
+                        <Button Content="&#xE893;" Foreground="Blue" Background="#20FFFFFF" Style="{StaticResource NextButton}" Tag="&#xE623;" Click="OnNextSong" IsEnabled="False" x:Name="NextBtn" />
                     </StackPanel>
                     <Slider Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}" ValueChanged="VolumeChange" IsEnabled="False" x:Name="VolumeControl" Margin="10" />
                 </Grid>

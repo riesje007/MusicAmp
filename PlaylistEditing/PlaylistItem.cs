@@ -58,6 +58,8 @@ namespace PlaylistEditing
             get => field;
             set
             {
+                if (value is null)
+                    return;
                 if (field != value && !value.StartsWith("http", StringComparison.OrdinalIgnoreCase))
                 {
                     field = value;

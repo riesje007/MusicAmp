@@ -122,61 +122,68 @@
                 <Button ToolTipService.ToolTip="Randomize playlist" Click="RandomizeClicked">
                     <TextBlock Text="&#xE895;" Foreground="{Binding Foreground}" />
                 </Button>
+                <Button ToolTipService.ToolTip="Increase Font Size" Click="IncreaseFontSize">
+                    <TextBlock Text="&#xE8E8;" Foreground="{Binding Foreground}" />
+                </Button>
+                <Button ToolTipService.ToolTip="Decrease Font Size" Click="DecreaseFontSize">
+                    <TextBlock Text="&#xE8E7;" Foreground="{Binding Foreground}" />
+                </Button>
             </StackPanel>
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" x:Name="PlaylistScroller" >
-                <ListView ItemsSource="{Binding Path=SongPlaylist, Mode=OneWay}" Foreground="{Binding Foreground}" Background="#90000000" x:Name="PlayListView" 
-                          SelectionMode="Extended" PreviewMouseWheel="PlayListViewScrolling" SelectionChanged="PlaylistSelectionChanged" >
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem">
-                            <Setter Property="VerticalAlignment" Value="Center" />
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListViewItem">
-                                        <Grid x:Name="RootGrid" Background="Transparent">
-                                            <VisualStateManager.VisualStateGroups>
-                                                <VisualStateGroup x:Name="CommonStates">
-                                                    <VisualState x:Name="Normal" />
-                                                    <VisualState x:Name="PointerOver">
-                                                        <Storyboard>
-                                                            <ColorAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)" To="#20000000" Duration="0:0:0.1" />
-                                                        </Storyboard>
-                                                            </VisualState>
-                                                    <VisualState x:Name="Selected">
-                                                        <Storyboard>
-                                                            <ColorAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)" To="#20FFFFFF" Duration="0:0:0.1" />
-                                                        </Storyboard>
-                                                    </VisualState>
-                                                    <VisualState x:Name="PointerOverSelected">
-                                                        <Storyboard>
-                                                            <ColorAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)" To="#50FFFFFF" Duration="0:0:0.1" />
-                                                        </Storyboard>
-                                                    </VisualState>
-                                                </VisualStateGroup>
-                                            </VisualStateManager.VisualStateGroups>
-                                            <ContentPresenter />
-                                        </Grid>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                            <EventSetter Event="MouseDoubleClick" Handler="PlaylistItem_DoubleClicked" />
-                        </Style>
-                    </ListView.ItemContainerStyle>
-                    <ListView.ItemTemplate>
-                        <DataTemplate DataType="PlaylistItem">
-                            <Grid VerticalAlignment="Top" Margin="0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock FontFamily="Segoe UI" FontSize="10" Foreground="{Binding ElementName=PlayListView, Path=Foreground}" 
-                                               Text="{Binding PlaylistItemDisplay, Mode=OneWay}" Grid.Column="0"  />
-                                <TextBlock FontFamily="Segoe UI" FontSize="10" Foreground="{Binding ElementName=PlayListView, Path=Foreground}" MinWidth="20"
-                                               Text="{Binding DurationTextMinutes, Mode=OneWay}" Grid.Column="1" Margin="0 0 10 0" />
-                            </Grid>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-            </ScrollViewer>
-</Grid>
+            <ListView ItemsSource="{Binding Path=SongPlaylist, Mode=OneWay}" Foreground="{Binding Foreground}" Background="#90000000" x:Name="PlayListView" 
+                          SelectionMode="Extended" PreviewMouseWheel="PlayListViewScrolling" SelectionChanged="PlaylistSelectionChanged"  HorizontalContentAlignment="Stretch"
+                      ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.Row="1" >
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListViewItem">
+                                    <Grid x:Name="RootGrid" Background="Transparent">
+                                        <VisualStateManager.VisualStateGroups>
+                                            <VisualStateGroup x:Name="CommonStates">
+                                                <VisualState x:Name="Normal" />
+                                                <VisualState x:Name="MouseOver">
+                                                    <Storyboard>
+                                                        <ColorAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)" To="#50FFFFFF" Duration="0:0:0.1" />
+                                                    </Storyboard>
+                                                </VisualState>
+                                                <VisualState x:Name="Selected">
+                                                    <Storyboard>
+                                                        <ColorAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)" To="#5090AAFF" Duration="0:0:0.5" />
+                                                    </Storyboard>
+                                                </VisualState>
+                                                <VisualState x:Name="MouseOverSelected">
+                                                    <Storyboard>
+                                                        <ColorAnimation Storyboard.TargetName="RootGrid" Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)" To="#90FFFFFF" Duration="0:0:0.1" />
+                                                    </Storyboard>
+                                                </VisualState>
+                                            </VisualStateGroup>
+                                        </VisualStateManager.VisualStateGroups>
+                                        <ContentPresenter />
+                                    </Grid>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <EventSetter Event="MouseDoubleClick" Handler="PlaylistItem_DoubleClicked" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate DataType="PlaylistItem">
+                        <Grid VerticalAlignment="Top" Margin="0" HorizontalAlignment="Stretch">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock FontFamily="Segoe UI" FontSize="{Binding ElementName=PlayListView, Path=FontSize}" Foreground="{Binding ElementName=PlayListView, Path=Foreground}" 
+                                               Text="{Binding PlaylistItemDisplay, Mode=OneWay}" Grid.Column="0" TextTrimming="CharacterEllipsis"  />
+                            <TextBlock FontFamily="Segoe UI" FontSize="{Binding ElementName=PlayListView, Path=FontSize}" Foreground="{Binding ElementName=PlayListView, Path=Foreground}" MinWidth="20" 
+                                       Text="{Binding DurationTextMinutes, Mode=OneWay}" Grid.Column="1" Margin="0 0 10 0" 
+                                       HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" />
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Grid>
     </Grid>
 </UserControl>

@@ -1,26 +1,34 @@
 ﻿using NAudio.Wave;
 using PlaylistEditing;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Player
 {
     public class MusicPlayer
     {
-        private CancellationTokenSource? _cts;
+        /****************** public fields, properties and methods ******************/
+        public MusicPlayer()
+        {
+            _output = new WaveOutEvent();
+        }
+
+        // Events
         public event EventHandler<TimeSpan?>? PositionChanged;
-        private float _lastVolume = 0.0f;
         public event EventHandler<bool>? ErrorOccurred;
         public event EventHandler<bool>? PlayableSong;
-        private bool fetchingStream = false;
+        public event EventHandler<EventArgs>? EndOfSongReached;
 
-        public bool IsPlaying => _output is not null && _output.PlaybackState == PlaybackState.Playing;
+        public bool IsPlaying => _output is not null && _output.PlaybackState == PlaybackState.Playing && !_isStopping;
+        public PlaybackState? PlaybackStatus => _output?.PlaybackState;
 
         public PlaylistItem? CurrentSong
         {
-            get => field;
+            get => _currentsong;
             set
             {
-                field = value;
-                _ = OnCurrentSongChange(value, new CancellationTokenSource(TimeSpan.FromSeconds(3)).Token);
+                _currentsong = value;
             }
         }
 
@@ -34,159 +42,106 @@ namespace Player
             }
         }
 
-        private async Task StartTimer()
-        {
-            _cts = new CancellationTokenSource();
-            while (_cts is not null && !_cts.Token.IsCancellationRequested)
-            {
-                TimeSpan position = (_reader?.CurrentTime ?? _streamReader?.CurrentTime) ?? TimeSpan.Zero;
-                PositionChanged?.Invoke(this, position);
-                try
-                {
-                    await Task.Delay(1000, _cts.Token);
-                }
-                catch { }
-            }
-        }
-
-        private async Task OnCurrentSongChange(PlaylistItem? newSong, CancellationToken token)
-        {
-            await StopMediaPlayback(true);
-            if (CurrentSong is not null && !token.IsCancellationRequested)
-            {
-                if (_output is null)
-                    _output = new WaveOutEvent();
-
-                if (CurrentSong.IsStream && !token.IsCancellationRequested)
-                {
-                    bool succeeded = false;
-                    for (int i = 0; i < 3; i++)
-                    {
-                        try
-                        {
-                            _streamReader = await Task.Run(() => new MediaFoundationReader(CurrentSong.StreamUri!.OriginalString), token);
-                            succeeded = true;
-                            break;
-                        }
-                        catch
-                        {
-                            _streamReader = null;
-                        }
-                    }
-                    if (!succeeded)
-                        ErrorOccurred?.Invoke(this, true);
-
-                    if (_streamReader is not null)
-                    {
-                        _output!.Init(_streamReader);
-                        PlayableSong?.Invoke(this, true);
-                    }
-                    else
-                        ErrorOccurred?.Invoke(this, true);
-                }
-                else if (!token.IsCancellationRequested)
-                {
-                    _reader = new AudioFileReader(CurrentSong.FileInformation!.FullName);
-                    if (_reader is not null)
-                    {
-                        _output!.Init(_reader);
-                        PlayableSong?.Invoke(this, true);
-                    }
-                }
-            }
-        }
-
-        private async Task Reset()
-        {
-            _reader?.Dispose();
-            _reader = null;
-            _streamReader?.Dispose();
-            _streamReader = null;
-        }
-
-        private WaveOutEvent? _output;
-        private AudioFileReader? _reader;
-        private MediaFoundationReader? _streamReader;
-
-        public MusicPlayer()
-        {
-            _output = new WaveOutEvent();
-        }
-
-        /// <summary>
-        /// Seek to the specified position in the current track if supported.
-        /// </summary>
-        /// <param name="position">Position to seek to.</param>
         public void Seek(TimeSpan position)
         {
-            // Clamp to available length if possible
-            try
+            if (_reader != null && _reader.CanSeek && position <= _reader.TotalTime)
             {
-                if (_reader is not null)
-                {
-                    var length = _reader.TotalTime;
-                    if (position < TimeSpan.Zero) position = TimeSpan.Zero;
-                    if (position > length) position = length;
-                    _reader.CurrentTime = position;
-                }
-                //else if (_streamReader is not null)
-                //{
-                //    // MediaFoundationReader supports seeking for seekable sources
-                //    var length = _streamReader.TotalTime;
-                //    if (position < TimeSpan.Zero) position = TimeSpan.Zero;
-                //    if (position > length) position = length;
-                //    _streamReader.CurrentTime = position;
-                //}
+                _reader.CurrentTime = position;
+                if (_output.PlaybackState == PlaybackState.Paused)
+                    _pausedAt = position;
+                PositionChanged?.Invoke(this, _reader.CurrentTime);
             }
-            catch
+            else if (_streamReader != null && _streamReader.CanSeek && position <= _streamReader.TotalTime)
             {
-                // Ignore seek failures (e.g., non-seekable stream)
+                _streamReader.CurrentTime = position;
+                PositionChanged?.Invoke(this, _streamReader.CurrentTime);
             }
         }
 
-        public async Task Play(double volume = 0.0)
+        public async Task Play(double atVolume = 0.0)
         {
-            if (CurrentSong is null || _output is null || fetchingStream)
+            if (CurrentSong is null || _fetchingStream)
+                return;
+
+            if (CurrentSong.FileInformation is null && (CurrentSong.StreamUri is null || string.IsNullOrEmpty(CurrentSong.StreamUri.OriginalString)))
                 return;
 
             if (_reader is null && _streamReader is null)
-                await OnCurrentSongChange(CurrentSong, new CancellationTokenSource(TimeSpan.FromSeconds(3)).Token);
+                await OnCurrentSongChange(CurrentSong);
 
-            if (volume != 0.0)
-                _lastVolume = (float)volume;
+            if (_output.PlaybackState == PlaybackState.Paused && !CurrentSong.IsStream)
+            {
+                _reader?.CurrentTime = _pausedAt;
+                _pausedAt = TimeSpan.Zero;
+            }
+
+            if (atVolume != 0.0f)
+                _lastVolume = (float)atVolume;
             else
                 _lastVolume = Volume;
-            _output.Volume = 0.0f;
+
             _output.Play();
-            await Task.Delay(500);
+            _lastVolume = 0.0f;
+
             if (_cts is null)
-                _ = StartTimer();
-            if (_lastVolume > 0)
+                _playingTask = StartTimer();
+        }
+
+        public async Task Pause()
+        {
+            if (!CurrentSong!.IsStream)
             {
-                int fadeIn = 50;
-                float curStep = _lastVolume / (float)fadeIn;
-                for (int i = 0; i < fadeIn; i++)
+                _pausedAt = _reader?.CurrentTime ?? TimeSpan.Zero;
+                _lastVolume = Volume;
+                int steps = 100;
+                int interval = 10;
+                float stepSize = (float)_lastVolume / (float)steps;
+                for (int i = 0; i < steps; i++)
                 {
-                    _output.Volume += Math.Min(curStep, _lastVolume - _output.Volume);
-                    await Task.Delay(10);
+                    if (_output.PlaybackState != PlaybackState.Playing)
+                        break;
+                    _output.Volume -= Math.Min(stepSize, _output.Volume);
+                    await Task.Delay(interval);
                 }
             }
-            _lastVolume = 0.0f;
+
+            if (_output.PlaybackState == PlaybackState.Playing)
+                _output.Pause();
         }
 
         public async Task Stop()
         {
-            _cts?.Cancel();
             await StopMediaPlayback();
-            _cts = null;
         }
+
+        public Task ChangeSong(PlaylistItem? newSong)
+        {
+            _currentsong = newSong;
+            return OnCurrentSongChange(newSong);
+        }
+
+        /****************** private fields, properties and methods ******************/
+        private CancellationTokenSource? _cts;
+        private float _lastVolume = 0.0f;
+        private bool _fetchingStream = false;
+        private bool _startOnNewSong = false;
+        private WaveOutEvent _output;
+        private AudioFileReader? _reader;
+        private MediaFoundationReader? _streamReader;
+        private Task? _playingTask;
+        private PlaylistItem? _currentsong;
+        private TimeSpan _pausedAt = TimeSpan.Zero;
+        private bool _isStopping = false;
 
         private async Task StopMediaPlayback(bool noFadeOut = false)
         {
             if (CurrentSong is null)
                 return;
 
-            if (_output is not null && (_output.PlaybackState == PlaybackState.Playing || _output.PlaybackState == PlaybackState.Paused))
+            _isStopping = true;
+            _cts?.Cancel();
+
+            if (_output.PlaybackState != PlaybackState.Stopped)
             {
                 if (!noFadeOut)
                 {
@@ -199,26 +154,111 @@ namespace Player
                         await Task.Delay(10);
                     }
                 }
-
                 _output.Stop();
             }
+
+            if (_playingTask is not null)
+                await _playingTask;
+            _playingTask = null;
+
             await Reset();
+            _isStopping = false;
         }
 
-        public async Task Pause()
+        private async Task Reset()
         {
-            if (_output is null)
-                return;
-
-            if (_output.PlaybackState == PlaybackState.Playing)
-                _output.Pause();
-        }
-
-        ~MusicPlayer()
-        {
-            _output?.Dispose();
             _reader?.Dispose();
+            _reader = null;
             _streamReader?.Dispose();
+            _streamReader = null;
+        }
+
+        private async Task StartTimer()
+        {
+            _cts = new CancellationTokenSource();
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            while (!_cts.Token.IsCancellationRequested)
+            {
+                TimeSpan position = (_reader?.CurrentTime ?? _streamReader?.CurrentTime) ?? TimeSpan.Zero;
+                TimeSpan timePlaying = DateTimeOffset.UtcNow - now;
+                PositionChanged?.Invoke(this, position);
+                if (position > timePlaying)
+                    now = DateTimeOffset.UtcNow.Add(-position);
+                if (_reader is not null && (position >= _reader.TotalTime || timePlaying >= _reader.TotalTime))
+                {
+                    _cts.Cancel();
+                    _startOnNewSong = true;
+                    EndOfSongReached?.Invoke(this, EventArgs.Empty);
+                }
+                try
+                {
+                    await Task.Delay(400, _cts.Token);
+                }
+                catch { }
+            }
+            _cts = null;
+        }
+
+        private async Task OnCurrentSongChange(PlaylistItem? newSong)
+        {
+            if (IsPlaying)
+                await StopMediaPlayback(true);
+            if (CurrentSong is not null)
+            {
+                if (CurrentSong.IsStream)
+                {
+                    bool succeeded = false;
+                    for (int i = 0; i < 3; i++)
+                    {
+                        try
+                        {
+                            CancellationTokenSource mySource = new CancellationTokenSource(2000);
+                            _streamReader = await Task.Run(async () => new MediaFoundationReader(CurrentSong.StreamUri!.OriginalString), mySource.Token);
+                            succeeded = true;
+                            break;
+                        }
+                        catch { _streamReader = null; }
+                    }
+                    if (!succeeded)
+                        ErrorOccurred?.Invoke(this, true);
+
+                    if (_streamReader is not null)
+                    {
+                        _output.Init(_streamReader);
+                        PlayableSong?.Invoke(this, true);
+                    }
+                    else
+                        ErrorOccurred?.Invoke(this, true);
+                }
+
+                else
+                {
+                    if (_isStopping)
+                    {
+                        DateTimeOffset switchTime = DateTimeOffset.UtcNow;
+                        float lastVolume = _lastVolume;
+                        while (DateTimeOffset.UtcNow - switchTime < TimeSpan.FromSeconds(3) && _isStopping)
+                        {
+                            await Task.Delay(100);
+                        }
+                        Volume = lastVolume;
+                    }
+
+                    _reader = new AudioFileReader(CurrentSong.FileInformation!.FullName);
+                    if (_reader is not null)
+                    {
+                        _output.Init(_reader);
+                        PlayableSong?.Invoke(this, true);
+                    }
+                }
+
+                if (_startOnNewSong)
+                {
+                    _startOnNewSong = false;
+                    if (_reader is not null || _streamReader is not null)
+                        await Play(_lastVolume);
+                }
+            }
         }
     }
 }

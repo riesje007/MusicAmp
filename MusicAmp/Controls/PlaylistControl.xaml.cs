@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using PlaylistEditing;
+using System.Windows.Media;
 
 namespace MusicAmp.Controls
 {
@@ -16,6 +17,8 @@ namespace MusicAmp.Controls
         public static readonly DependencyProperty SongPlaylistProperty = DependencyProperty.Register("SongPlaylist", typeof(Playlist), typeof(PlaylistControl), new PropertyMetadata(null));
         public event EventHandler<PlaylistItem>? PlaylistItemDoubleClicked;
         public event EventHandler<PlaylistItem?>? NewSelection;
+        public event EventHandler<EventArgs>? NoContent;
+        public event EventHandler<EventArgs>? ContentLoaded;
 
         public Playlist SongPlaylist
         {
@@ -28,6 +31,7 @@ namespace MusicAmp.Controls
             InitializeComponent();
             DataContext = this;
             SongPlaylist = new Playlist();
+            FetchPlaylistScrollViewer();
         }
 
         public PlaylistItem? SelectNext()
@@ -63,8 +67,8 @@ namespace MusicAmp.Controls
         }
 
         public bool IsFirst()
-        {  
-            return PlayListView.SelectedIndex == 0; 
+        {
+            return PlayListView.SelectedIndex == 0;
         }
 
         public bool IsLast()
@@ -74,11 +78,25 @@ namespace MusicAmp.Controls
 
         /* Private fields and methods */
         private FileInfo? PlaylistFile;
+        private ScrollViewer? PlaylistScroller = null;
+
+        private void FetchPlaylistScrollViewer()
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(PlayListView); i++)
+            {
+                if (VisualTreeHelper.GetChild(PlayListView, i) is ScrollViewer sv)
+                {
+                    PlaylistScroller = sv;
+                    break;
+                }
+            }
+        }
 
         private async void NewPlaylistClicked(object sender, RoutedEventArgs e)
         {
             SongPlaylist.Clear();
             PlaylistFile = null;
+            NoContent?.Invoke(this, EventArgs.Empty);
         }
 
         private async void OpenFileClicked(object sender, RoutedEventArgs e)
@@ -92,6 +110,14 @@ namespace MusicAmp.Controls
             {
                 PlaylistFile = new FileInfo(dialog.FileName);
                 SongPlaylist = Playlist.LoadPlaylist(PlaylistFile) ?? new();
+                if (SongPlaylist.Count == 0)
+                    NoContent?.Invoke(this, EventArgs.Empty);
+                else
+                {
+                    ContentLoaded?.Invoke(this, EventArgs.Empty);
+                    PlayListView.SelectedIndex = 0;
+                    PlaylistSelectionChanged(this, null);
+                }
             }
         }
 
@@ -123,21 +149,37 @@ namespace MusicAmp.Controls
 
         private void AddFilesClicked(object sender, RoutedEventArgs e)
         {
+            bool checkAfter = SongPlaylist.Count == 0;
             var dialog = new OpenFileDialog
             {
                 Filter = "Audio files (*.mp3;*.wav;*.flac)|*.mp3;*.wav;*.flac|All files (*.*)|*.*",
                 Multiselect = true
             };
+
             if (dialog.ShowDialog() == true)
             {
                 foreach (var file in dialog.FileNames)
                     SongPlaylist.AddItem(new PlaylistItem(new FileInfo(file)));
+            }
+
+            if (checkAfter)
+            {
+                if (SongPlaylist.Count == 0)
+                    NoContent?.Invoke(this, EventArgs.Empty);
+                else
+                {
+                    ContentLoaded?.Invoke(this, EventArgs.Empty);
+                    PlayListView.SelectedIndex = 0;
+                    PlaylistSelectionChanged(this, null);
+                }
             }
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "It was the authors specific choice to only support Windows for now.")]
         private void AddFolderClicked(object sender, RoutedEventArgs e)
         {
+            bool checkAfter = SongPlaylist.Count == 0;
+
             var dialog = new CommonOpenFileDialog
             {
                 IsFolderPicker = true,
@@ -153,33 +195,66 @@ namespace MusicAmp.Controls
                 foreach (var file in files)
                     SongPlaylist.AddItem(new PlaylistItem(new FileInfo(file)));
             }
+
+            if (checkAfter)
+            {
+                if (SongPlaylist.Count == 0)
+                    NoContent?.Invoke(this, EventArgs.Empty);
+                else
+                {
+                    ContentLoaded?.Invoke(this, EventArgs.Empty);
+                    PlayListView.SelectedIndex = 0;
+                    PlaylistSelectionChanged(this, null);
+                }
+            }
         }
 
         private void ClearPlaylistClicked(object sender, RoutedEventArgs e)
         {
             SongPlaylist.Clear();
+            NoContent?.Invoke(this, EventArgs.Empty);
         }
 
         private void RemoveSelectedClicked(object sender, RoutedEventArgs e)
         {
-            //var selectedItems = PlaylistListBox.SelectedItems.Cast</* TODO: define the type to be removed!! */>().ToList();
-            //foreach (var item in selectedItems)
-            //    SongPlaylist.Remove(item);
+            List<PlaylistItem> selectedItems = PlayListView.SelectedItems.Cast<PlaylistItem>().ToList();
+            foreach (var item in selectedItems)
+                SongPlaylist.RemoveItem(item.SongTrackNumber);
+
+            if (SongPlaylist.Count == 0)
+                NoContent?.Invoke(this, EventArgs.Empty);
+            else
+                ContentLoaded?.Invoke(this, EventArgs.Empty);
         }
 
         private void MoveUpClicked(object sender, RoutedEventArgs e)
         {
-            // TODO: Move selected item up in the playlist
+            if (PlayListView.SelectedIndex == 0)
+                return;
+
+            int oldPos = PlayListView.SelectedIndex;
+            int newPos = oldPos - 1;
+            SongPlaylist.MoveItem(oldPos, newPos);
+            PlayListView.SelectedIndex = newPos;
         }
 
         private void MoveDownClicked(object sender, RoutedEventArgs e)
         {
-            // TODO: Move selected item down in the playlist
+            if (PlayListView.SelectedIndex == PlayListView.Items.Count - 1)
+                return;
+
+            int oldPos = PlayListView.SelectedIndex;
+            int newPos = oldPos + 1;
+            SongPlaylist.MoveItem(oldPos, newPos);
+            PlayListView.SelectedIndex = newPos;
         }
 
         private void RandomizeClicked(object sender, RoutedEventArgs e)
         {
-            // TODO: Randomize the order of items in the playlist
+            PlaylistItem? wasSelected = PlayListView.SelectedItem as PlaylistItem;
+            SongPlaylist.Randomize();
+            if (wasSelected is not null)
+                PlayListView.ScrollIntoView(wasSelected);
         }
 
         private void PlaylistItem_DoubleClicked(object sender, RoutedEventArgs e)
@@ -192,6 +267,9 @@ namespace MusicAmp.Controls
 
         private void PlayListViewScrolling(object sender, System.Windows.Input.MouseWheelEventArgs e)
         {
+            ScrollViewer? PlaylistScroller = null;
+            if (PlaylistScroller is null)
+                return;
             double newOffset = PlaylistScroller.VerticalOffset - e.Delta / 3.0;
             PlaylistScroller.ScrollToVerticalOffset(newOffset);
             e.Handled = true;
@@ -202,6 +280,20 @@ namespace MusicAmp.Controls
             var item = PlayListView.SelectedItem as PlaylistItem;
             if (item is not null)
                 NewSelection?.Invoke(this, item);
+        }
+
+        private void IncreaseFontSize(object sender, RoutedEventArgs e)
+        {
+            if (PlayListView.FontSize < 100.0)
+                PlayListView.FontSize += 1.0;
+            PlayListView.ScrollIntoView(PlayListView.SelectedItem);
+        }
+
+        private void DecreaseFontSize(object sender, RoutedEventArgs e)
+        {
+            if (PlayListView.FontSize > 1.0)
+                PlayListView.FontSize -= 1.0;
+            PlayListView.ScrollIntoView(PlayListView.SelectedItem);
         }
     }
 }
